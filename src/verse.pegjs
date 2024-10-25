@@ -16,6 +16,7 @@
   function UnaryExpression(operator, expression) { return { type: "UnaryExpression", operator: operator, expression: expression }; }
   function IfStatement(condition, body) { return { type: "IfStatement", condition: condition, body: body }; }
   function LoopStatement(body) { return { type: "LoopStatement", body: body }; }
+  function ForStatement(variable, start, end, body) { return { type: "ForStatement", variable: variable, start: start, end: end, body: body }; }
   function BreakStatement() { return { type: "BreakStatement" }; }
 }
 
@@ -31,6 +32,7 @@ Statement
   / PrintStatement
   / IfStatement
   / LoopStatement
+  / ForStatement
   / BreakStatement
 
 VariableDeclaration
@@ -56,6 +58,17 @@ IfStatement
 LoopStatement
   = "loop" _ ":" _ body:Statement+ {
       return LoopStatement(body);
+    }
+
+ForStatement
+  = "for" _ "(" _ variable:Identifier _ ":=" _ start:Expression _ ".." _ end:Expression _ ")" _ ":" _ body:Statement+ {
+      return {
+        type: "ForStatement",
+        variable,
+        start,
+        end,
+        body
+      };
     }
 
 BreakStatement

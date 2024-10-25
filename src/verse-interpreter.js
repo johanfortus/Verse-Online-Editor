@@ -41,6 +41,8 @@ export class VerseInterpreter {
       case 'LoopStatement':
         this.visitLoopStatement(statement);
         break;
+      case 'ForStatement':
+        this.visitForStatement(statement);
       case 'BreakStatement':
         this.breakEncountered = true;
         break;

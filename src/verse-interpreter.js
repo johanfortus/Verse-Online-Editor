@@ -115,27 +115,15 @@ export class VerseInterpreter {
   }
 
   visitForStatement(forStatement) {
-    const collection = this.evaluateExpression(forStatement.collection);
-    let iterable;
-
-    if (forStatement.collection.type === 'Range') {
-      const start = this.evaluateExpression(forStatement.collection.start);
-      const end = this.evaluateExpression(forStatement.collection.end);
-      iterable = Array.from({length: end - start + 1}, (_, i) => start + i);
-    } 
-    else if (Array.isArray(collection)) {
-      iterable = collection;
-    } 
-    else if (typeof collection === 'object') {
-      iterable = Object.entries(collection);
-    } 
-    else {
-      throw new Error(`Unsupported collection type for 'for' loop: ${typeof collection}`);
+    const start = this.evaluateExpression(forStatement.range.start);
+    const end = this.evaluateExpression(forStatement.range.end);
+    
+    if (typeof start !== "number" || typeof end !== "number") {
+      throw new Error("Range values must be integers");
     }
 
-    for (const item of iterable) {
-      this.symbolTable.set(forStatement.variable.name, { type: 'any', value: item });
-      
+    for (let i = start; i <= end; i++) {
+      this.symbolTable.set(forStatement.variable.name, { type: "int", value: i });
       for (const statement of forStatement.body) {
         this.visitStatement(statement);
         if (this.breakEncountered) {

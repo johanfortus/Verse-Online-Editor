@@ -31,36 +31,40 @@ function App() {
     }
 
     return (
-        <div>
+        <div style={{ margin: 0, padding: 0, height: '100%', boxSizing: '100%' }}>
             <h1>Verse Playground</h1>
 
+            <div style={{ display: 'flex', backgroundColor: 'lightgray', height: '100vh' }}>
             
-            <div style={{ display: 'flex' }}>
-
 
                 {/* Code Editor Container */}    
-                <div style={{ display:'flex', flexDirection:'column', width:'50%', padding:'10px'}}>
-                    <h2 style={{ margin:"0" }} >&lt;/&gt; Code: </h2>
+                <div style={{ display:'flex', flexDirection:'column', width:'50%', padding:'10px' }}>
+                    
+                    <h2 style={{ marginBottom:"10px" }} >
+                        <button style={{ marginLeft: '10px' }} onClick={runCode}>Run Code</button>
+                    </h2> 
+                    
                     <Editor
-                        height="500px"
+                        height="80%"
                         defaultLanguage="verse"
                         value={code}
                         onChange={handleEditorChange}
-                        theme="vs-dark"
+                        theme="vs-light"
                     />
                 </div>
                 
                 
                 {/* Output Area Container */}
                 <div style={{ display:"flex", flexDirection: "column", width: '50%', padding:'10px'}}>
-                    <h2 style={{ margin:"0" }}>Output: </h2>
-                    <div style={{ border: '1px solid #ddd', height: '500px', overflowY: 'scroll', backgroundColor: '#f9f9f9'}}>
+                    <h2 style={{ marginBottom:"10px" }}>Output: </h2>
+
+                    <div style={{ border: '1px solid #ddd', height: '80%', overflowY: 'scroll', color: '#FFFFFF', backgroundColor: '#000000', paddingLeft: '20px' }}>
                         <pre>{output}</pre>
                     </div>
                 </div>
 
             </div>
-            <button style={{ marginLeft: '10px' }} onClick={runCode}>Run Code</button>
+            
         </div>
     );
 

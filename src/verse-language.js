@@ -1,15 +1,10 @@
-/**
- * verse-language.js
- * 
- * This file defines how the Verse syntax is recognized by the Monaco editor.
- * 
- * Keywords & Operators - Specifies syntax elements like keywords and operators
- * 
- * Tokenizer: Defines rules for tokenizing the Verse language:
- *     root: Describes the primary structure, including keywords, identifiers, and string literals.
- *     comment, string, and whitespace: Define how to handle comments, strings, and whitespace.
- * 
- */
+// verse-language.js
+// This file defines how the Verse syntax is recognized by the Monaco editor.
+// Keywords & Operators - Specifies syntax elements like keywords and operators
+// Tokenizer: Defines rules for tokenizing the Verse language:
+// root: Describes the primary structure, including keywords, identifiers, and string literals.
+// comment, string, and whitespace: Define how to handle comments, strings, and whitespace.
+
 
 import * as monaco from 'monaco-editor';
 

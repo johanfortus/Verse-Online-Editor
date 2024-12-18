@@ -1,13 +1,13 @@
 import { MonacoLanguageClient, CloseAction, ErrorAction, createConnection } from 'monaco-languageclient';
 import { WebSocketMessageReader, WebSocketMessageWriter } from 'vscode-ws-jsonrpc';
-import { listen } from 'vscode-ws-jsonrpc';
 
-const url = 'ws://localhost:3000';
+const url = 'ws://localhost:3001';
 const webSocket = new WebSocket(url);
 
 webSocket.onopen = () => {
   const reader = new WebSocketMessageReader(webSocket);
   const writer = new WebSocketMessageWriter(webSocket);
+
   const connection = createConnection(reader, writer, {
     error: () => ErrorAction.Continue,
     close: () => CloseAction.DoNotRestart
@@ -23,9 +23,7 @@ webSocket.onopen = () => {
       }
     },
     connectionProvider: {
-      get: (encoding) => {
-        return Promise.resolve(connection);
-      }
+      get: () => Promise.resolve(connection)
     }
   });
 

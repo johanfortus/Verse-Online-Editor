@@ -1,7 +1,7 @@
 import http from 'http';
 import { spawn } from 'child_process';
 import ws from 'ws';
-const { WebSocketServer } = ws;
+const { Server: WebSocketServer } = ws;
 
 import { toSocket } from 'vscode-ws-jsonrpc';
 import { createConnection, forward } from 'vscode-ws-jsonrpc/server';
@@ -22,6 +22,6 @@ wss.on('connection', (socket) => {
   forward(socketConnection, reader, writer, socketConnection);
 });
 
-server.listen(3000, () => {
-  console.log('LSP server is listening on port 3000');
+server.listen(3001, () => {
+  console.log('LSP server is listening on port 3001');
 });

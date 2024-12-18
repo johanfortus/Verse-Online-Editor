@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import * as verseParser from './verse-parser';
 import { VerseInterpreter } from './verse-interpreter';
+import { registerVerseLanguage } from './verse-language';
 
+registerVerseLanguage();
 
 function App() {
     const [code, setCode] = useState('// Write your Verse code here');

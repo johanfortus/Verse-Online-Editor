@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A playground for practicing Verse code",
   "main": "index.js",
-  "type" : "module",
+  "type": "module",
   "scripts": {
     "start": "react-scripts start",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -33,5 +33,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "peggy": "^4.2.0"
   }
 }

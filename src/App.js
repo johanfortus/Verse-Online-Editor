@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import * as verseParser from './verse-parser.js';
+// import * as verseParser from './verse-parser.js';
+import { parse } from './verse-parser.js';
 import { VerseInterpreter } from './verse-interpreter.js';
 import { registerVerseLanguage } from './verse-language.js';
 

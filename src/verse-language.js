@@ -6,12 +6,15 @@
 // comment, string, and whitespace: Define how to handle comments, strings, and whitespace.
 
 
-import * as monaco from 'monaco-editor';
+// import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 
-export function registerVerseLanguage() {
+export function registerVerseLanguage(monaco) {
 
 	// Register the 'verse' language with Monaco
+	console.log("Before registering language");
 	monaco.languages.register({ id: 'verse' });
+	console.log("Verse language registered");
 
 	// Set the language rules for syntax highlighting using Monarch Tokens Provider
 	monaco.languages.setMonarchTokensProvider('verse', {
@@ -118,4 +121,24 @@ export function registerVerseLanguage() {
 			],
 		},
 	});
+	console.log("Verse tokenizer loaded");
+
+	monaco.editor.defineTheme('verse-theme', {
+		base: 'vs-dark',
+		inherit: true,
+		rules: [
+			{ token: 'keyword', foreground: '#569CD6' },
+			{ token: 'type', foreground: '#4EC9B0' },
+			{ token: 'number', foreground: '#B5CEA8' },
+			{ token: 'string', foreground: '#CE9178' },
+			{ token: 'comment', foreground: '#6A9955' },
+			{ token: 'operator', foreground: '#D4D4D4' },
+			{ token: 'identifier', foreground: '#9CDCFE' },
+			{ token: '@brackets', foreground: '#FFD700' }
+		],
+		colors: {
+			'editor.background': '#1E1E1E',
+		}
+	});
+	console.log('verse theme loaded');
 }

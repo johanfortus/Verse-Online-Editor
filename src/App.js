@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { parse } from './verse-parser.js';
 import { VerseInterpreter } from './verse-interpreter.js';
 import { registerVerseLanguage } from './verse-language.js';
 
-registerVerseLanguage();
+// registerVerseLanguage();
 
 function App() {
 	const [code, setCode] = useState('// Write your Verse code here');
 	const [output, setOutput] = useState('');
 	const [astOutput, setAstOutput] = useState('');
 	const interpreter = new VerseInterpreter();
+
+	useEffect(() => {
+        registerVerseLanguage();
+        monaco.editor.setTheme('verse-theme');
+        console.log('verse-theme applied');
+    }, []);
 
 	const handleEditorChange = (value) => {
 		setCode(value);
@@ -49,9 +55,11 @@ function App() {
 					<Editor
 						height="80%"
 						defaultLanguage="verse"
+						language='verse'
+						theme="verse-theme"
 						value={code}
 						onChange={handleEditorChange}
-						theme="vs-dark"
+						
 					/>
 				</div>
 

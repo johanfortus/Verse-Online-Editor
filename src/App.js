@@ -59,9 +59,7 @@ function App() {
 						theme="verse-dark"
 						value={code}
 						onChange={handleEditorChange}
-						onMount={(editor, monaco) => {
-							monaco.editor.setTheme('verse-dark')
-						}}
+						onMount={handleEditorMount}
 					/>
 				</div>
 

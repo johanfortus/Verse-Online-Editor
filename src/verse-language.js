@@ -128,10 +128,7 @@ export function registerVerseLanguage(monaco) {
 		base: 'vs-dark',
 		inherit: true,
 		rules: verseDarkTheme.tokenColors,
-		colors: {
-			...verseDarkTheme.colors,
-			'editor.background': '#000000'
-		}
+		colors: verseDarkTheme.colors
 	});
 	console.log('verse theme loaded');
 }

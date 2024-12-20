@@ -63,8 +63,14 @@ export class VerseInterpreter {
 	}
 
 	visitVariableDeclaration(declaration) {
+		console.log('VariableDeclaration - Name: ', declaration.name.name);
+		const varName = declaration.name.name;
+		if(this.symbolTable.has(varName)) {
+			throw new Error(`Variable '${varName}' is already declared`);
+		}
+
 		const value = this.evaluateExpression(declaration.value);
-		console.log(`Declaring variable ${declaration.name.name} with type ${declaration.varType.name} and value ${value}`);
+		console.log(`Declaring variable ${declaration.name.name} of type '${declaration.varType.name}' with value ${value} (Type: ${typeof value})`);
 		this.symbolTable.set(declaration.name.name, { type: declaration.varType.name, value });
 	}
 

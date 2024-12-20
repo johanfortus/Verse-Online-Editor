@@ -85,9 +85,16 @@ Statement
   / ForStatement
   / BreakStatement
 
+Identifier
+  = h:[a-zA-Z_] t:[a-zA-Z0-9_]* {
+    console.log("Captured Identifier:", h + t.join(''));
+    return { type: "Identifier", name:  h + t.join('')};
+  }
+
 
 VariableDeclaration
   = "var" _ name:Identifier _ ":" _ varType:Type _ "=" _ value:Expression _ {
+      console.log(`Variable Declaration - Name: ${name.name}, Type: ${varType.name}`);
       return VariableDeclaration(name, varType, value);
     }
 
@@ -223,7 +230,10 @@ UnaryOperator
 
 
 AssignmentOperator
-  = "=" / "+="
+  = "=" / "+=" {
+      console.log("Captured AssignmentOperator:", text());
+      return { type: "AssignmentOperator", value: text() };
+  }
 
 
 StringLiteral
@@ -267,12 +277,12 @@ ArrayAccess
     }
 
 
-Identifier
-  = name:$[a-zA-Z_][a-zA-Z0-9_]* { return Identifier(name); }
-
 
 Type
-  = name:$("float" / "int" / "string" / "logic") { return Type(name); }
+  = name:$("float" / "int" / "string" / "logic") { 
+      console.log("Captured Type: ", name);
+      return { type: "Type", name };
+   }
 
 
 _ "whitespace"

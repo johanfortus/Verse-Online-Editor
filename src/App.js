@@ -24,6 +24,7 @@ function App() {
 
 	const runCode = () => {
 		try {
+			console.log("Raw Input Code:", code);
 			const ast = parse(code);
 			console.log('Parsed AST:', ast);
 			setAstOutput(JSON.stringify(ast, null, 2));

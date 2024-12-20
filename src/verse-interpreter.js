@@ -231,7 +231,7 @@ export class VerseInterpreter {
 				result = expression.value;
 				break;
 			case 'BooleanLiteral':
-				result = expression.value === 'true';
+				result = expression.value;
 				break;
 			case 'Identifier':
 				if (this.symbolTable.has(expression.name)) {

@@ -31,7 +31,7 @@
 
   function FloatLiteral(value) { return { type: "FloatLiteral", value: parseFloat(value) }; }
 
-  function BooleanLiteral(value) { return { type: "BooleanLiteral", value: value === "true" }; }
+  function BooleanLiteral(value) { return { type: "BooleanLiteral", value }; }
 
   function Identifier(name) { return { type: "Identifier", name: name }; }
 
@@ -239,7 +239,8 @@ FloatLiteral
 
 
 BooleanLiteral
-  = value:("true" / "false") { return BooleanLiteral(value); }
+  = "true" { return BooleanLiteral(true); }
+  / "false" { return BooleanLiteral(false); }
 
 
 ArrayLiteral

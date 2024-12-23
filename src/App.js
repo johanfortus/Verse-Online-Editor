@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { parse } from './verse-parser.js';
 import { VerseInterpreter } from './verse-interpreter.js';
-import { registerVerseLanguage } from './verse-language.js';
-
-// registerVerseLanguage();
+import { registerVerseLanguage } from './verse-language.js';s
 
 function App() {
 	const [code, setCode] = useState('# Write your Verse code here');
@@ -33,10 +31,8 @@ function App() {
 			setOutput(result);
 		}
 		catch (e) {
-			// setOutput("Compilation Error");
 			setOutput(`Parse error: ${e.message}`);
 		}
-		// setOutput(`Code ${code}`)
 	}
 
 	return (

@@ -124,8 +124,6 @@ export function registerVerseLanguage(monaco) {
 	});
 	console.log("Verse tokenizer loaded");
 
-<<<<<<< HEAD
-=======
     monaco.languages.setLanguageConfiguration('verse', {
         autoClosingPairs: [
             { open: '(', close: ')' },
@@ -143,7 +141,6 @@ export function registerVerseLanguage(monaco) {
         ],
     });
 
->>>>>>> 88959b8f (Migrated project to vite)
 	monaco.editor.defineTheme('verse-dark', {
 		base: 'vs-dark',
 		inherit: true,

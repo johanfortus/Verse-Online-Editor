@@ -12,10 +12,18 @@ const CodeEditor = ({ code, setCode, handleEditorMount, runCode }) => {
     return (  
         <div className='editor-container'>
 
-        <div className='editor-header' >
-            <button style={{ marginLeft: '10px' }} onClick={runCode}>Run Code</button>
-        </div>
+        <div className='editor-header'>
 
+            <div className='file-name'>
+                test_device.verse
+            </div>
+
+            <div className='button-container'>
+                <button onClick={runCode}>Run Code</button>
+            </div>
+            
+        </div>
+    
             <Editor
                 height="80%"
                 defaultLanguage="verse"

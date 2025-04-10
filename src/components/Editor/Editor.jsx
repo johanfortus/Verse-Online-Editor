@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
+import './Editor.css';
 
 const CodeEditor = ({ code, setCode, handleEditorMount, runCode }) => {
 
@@ -9,10 +10,12 @@ const CodeEditor = ({ code, setCode, handleEditorMount, runCode }) => {
 
 
     return (  
-        <div style={{ display: 'flex', flexDirection: 'column', width: '50%', padding: '10px' }}>
-        <h2 style={{ marginBottom: "10px" }} >
+        <div className='editor-container'>
+
+        <div className='editor-header' >
             <button style={{ marginLeft: '10px' }} onClick={runCode}>Run Code</button>
-        </h2>
+        </div>
+
             <Editor
                 height="80%"
                 defaultLanguage="verse"
@@ -24,6 +27,14 @@ const CodeEditor = ({ code, setCode, handleEditorMount, runCode }) => {
                 options={{
                     fontSize: 14,
                     autoClosingBrackets: 'always',
+                    scrollbar: {
+                        vertical: 'hidden',
+                        horizontal: 'hidden',
+                    },
+                    minimap: {
+                        enabled: false
+                    },
+                    overviewRulerLanes: 0,
                 }}
             />
         </div>

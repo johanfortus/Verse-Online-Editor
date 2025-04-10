@@ -4,7 +4,7 @@ import './Header.css'
 
 const Header = () => {
     return (
-        <div className="header-component">
+        <div className="header-container">
             <img src={logo} className='logo-icon'></img>
             <span className='logo-title'>Verse Compiler</span>
             

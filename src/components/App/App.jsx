@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Editor from '../Editor/Editor.jsx';
+import Output from '../Output/Output.jsx';
 import { defaultCode } from '../../utils/defaultCode.js';
 import { parse } from '../../utils/parser.js';
 import { VerseInterpreter } from '../../utils/interpreter.js';
@@ -15,7 +16,7 @@ function App() {
 		console.log('monaco is ready');
 		registerVerseLanguage(monaco);
 		monaco.editor.setTheme('verse-dark');
-	}
+	};
 
 	const runCode = () => {
 		try {
@@ -30,41 +31,19 @@ function App() {
 		catch (e) {
 			setOutput(`Parse error: ${e.message}`);
 		}
-	}
+	};
 
 	return (
-		<div style={{ margin: 0, padding: 0, height: '100%', boxSizing: 'border-box' }}>
+		<div>
 			<h1 style={{ padding: 3 }}>Verse Compiler</h1>
 
 			<div style={{ display: 'flex', backgroundColor: 'lightgray', height: '100vh' }}>
-
-			
-				{/* Code Editor Container */}
-				<div style={{ display: 'flex', flexDirection: 'column', width: '50%', padding: '10px' }}>
-
-					<h2 style={{ marginBottom: "10px" }} >
-						<button style={{ marginLeft: '10px' }} onClick={runCode}>Run Code</button>
-					</h2>
-
-					<Editor code={code} setCode={setCode} handleEditorMount={handleEditorMount} />
-				</div>
-
-
-				{/* Output Area Container */}
-				<div style={{ display: "flex", flexDirection: "column", width: '50%', padding: '10px' }}>
-					<h2 style={{ marginBottom: "10px" }}>Output: </h2>
-
-					<div style={{ border: '1px solid #ddd', height: '80%', overflowY: 'scroll', color: '#FFFFFF', backgroundColor: '#000000', paddingLeft: '20px', fontSize: '14px' }}>
-						<pre>{output}</pre>
-					</div>
-
-				</div>
-
+				<Editor code={code} setCode={setCode} handleEditorMount={handleEditorMount} runCode={runCode} />
+				<Output output={output} />
 			</div>
 
 		</div>
 	);
-
-}
+};
 
 export default App;

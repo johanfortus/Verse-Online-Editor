@@ -124,6 +124,26 @@ export function registerVerseLanguage(monaco) {
 	});
 	console.log("Verse tokenizer loaded");
 
+<<<<<<< HEAD
+=======
+    monaco.languages.setLanguageConfiguration('verse', {
+        autoClosingPairs: [
+            { open: '(', close: ')' },
+            { open: '{', close: '}' },
+            { open: '[', close: ']' },
+            { open: '"', close: '"' },
+            { open: "'", close: "'" },
+        ],
+        surroundingPairs: [
+            { open: '(', close: ')' },
+            { open: '{', close: '}' },
+            { open: '[', close: ']' },
+            { open: '"', close: '"' },
+            { open: "'", close: "'" },
+        ],
+    });
+
+>>>>>>> 88959b8f (Migrated project to vite)
 	monaco.editor.defineTheme('verse-dark', {
 		base: 'vs-dark',
 		inherit: true,

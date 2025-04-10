@@ -1,10 +1,16 @@
 import React from 'react';
+import './Output.css'
 
 const Output = ({ output }) => {
     return (
-        <div style={{ display: "flex", flexDirection: "column", width: '50%', padding: '10px' }}>
-            <h2 style={{ marginBottom: "10px" }}>Output: </h2>
-            <div style={{ border: '1px solid #ddd', height: '80%', overflowY: 'scroll', color: '#FFFFFF', backgroundColor: '#000000', paddingLeft: '20px', fontSize: '14px' }}>
+        <div className='output-container'>
+
+            <div className='output-header'>
+                <span className='output-title'>Output </span>
+            </div>
+
+
+            <div style={{ height: '80%', overflowY: 'scroll', color: '#FFFFFF', backgroundColor: '#000000', paddingLeft: '5px', paddingTop: '5px', fontSize: '14px' }}>
                 <pre>{output}</pre>
             </div>
         </div>

@@ -1,4 +1,4 @@
-// verse-interpreter.js
+// interpreter.js
 // This file contains the VerseInterpreter class and responsible for interpreting an Abstract Syntax Tree (AST).
 // The AST is created by the parser generated using PEG.js based on the Verse grammar definition.
 // PEG.js generates verse-parser.js, and given code input, constructs an AST following the defined grammar rules.

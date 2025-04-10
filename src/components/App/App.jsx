@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { parse } from '../../verse-parser.js';
-import { VerseInterpreter } from '../../verse-interpreter.js';
-import { registerVerseLanguage } from '../../verse-language.js';
+import { parse } from '../../utils/parser.js';
+import { VerseInterpreter } from '../../utils/interpreter.js';
+import { registerVerseLanguage } from '../../language/verse-language.js';
 
 function App() {
 	const [code, setCode] = useState('# Write your Verse code here');
@@ -70,7 +70,7 @@ function App() {
 					<h2 style={{ marginBottom: "10px" }}>Output: </h2>
 
 					<div style={{ border: '1px solid #ddd', height: '80%', overflowY: 'scroll', color: '#FFFFFF', backgroundColor: '#000000', paddingLeft: '20px', fontSize: '14px' }}>
-						<pre style={{ margin: 0 }}>{output}</pre>
+						<pre>{output}</pre>
 					</div>
 
 				</div>

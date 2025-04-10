@@ -8,7 +8,7 @@
 
 // import * as monaco from 'monaco-editor';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
-import verseDarkTheme from './verse-dark.json';
+import verseDarkTheme from '../themes/verse-dark.json';
 
 export function registerVerseLanguage(monaco) {
 

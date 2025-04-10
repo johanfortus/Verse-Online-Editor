@@ -19,7 +19,7 @@ const CodeEditor = ({ code, setCode, handleEditorMount, runCode }) => {
             </div>
 
             <div className='button-container'>
-                <button onClick={runCode}>Run Code</button>
+                <button className='run-btn' onClick={runCode}>Run</button>
             </div>
             
         </div>

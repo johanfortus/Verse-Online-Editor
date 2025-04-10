@@ -32,3 +32,17 @@
     width: 100%;
     border-bottom: 1px solid rgb(82, 82, 82);   
 }
+
+.run-btn {
+    background-color: rgb(0, 96, 221);
+    color: white;
+    border: none;
+    padding: 7px 20px 7px 20px;
+    border-radius: 2px;
+    font-weight: 600;
+}
+
+.run-btn:hover {
+    background-color: rgb(0, 73, 168);
+    cursor: pointer;
+}

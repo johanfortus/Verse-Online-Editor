@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
+import { defaultCode } from '../../utils/defaultCode.js';
 import { parse } from '../../utils/parser.js';
 import { VerseInterpreter } from '../../utils/interpreter.js';
 import { registerVerseLanguage } from '../../language/verse-language.js';
 
 function App() {
-	const [code, setCode] = useState('# Write your Verse code here');
+	const [code, setCode] = useState(defaultCode);
 	const [output, setOutput] = useState('');
 	const [astOutput, setAstOutput] = useState('');
 	const interpreter = new VerseInterpreter();

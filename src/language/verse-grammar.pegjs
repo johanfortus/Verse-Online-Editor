@@ -86,15 +86,17 @@ Statement
   / BreakStatement
 
 Identifier
-  = h:[a-zA-Z_] t:[a-zA-Z0-9_]* {
-    console.log("Captured Identifier:", h + t.join(''));
-    return { type: "Identifier", name:  h + t.join('')};
-  }
+  = !ReservedKeyword h:[a-zA-Z_] t:[a-zA-Z0-9_]* {
+      console.log("Captured Identifier:", h + t.join(''));
+      return { type: "Identifier", name: h + t.join('') };
+    }
 
+ReservedKeyword
+  = "array"
 
 VariableDeclaration
-  = "var" _ name:Identifier _ ":" _ varType:Type _ "=" _ value:Expression _ {
-      console.log(`Variable Declaration - Name: ${name.name}, Type: ${varType.name}`);
+  = ("var" _)? name:Identifier _ ":" _ varType:(Type / ArrayType) _ "=" _ value:Expression _ {
+      console.log(`Variable Declaration - Name: ${name.name}, Type: ${varType.type}`);
       return VariableDeclaration(name, varType, value);
     }
 
@@ -158,6 +160,7 @@ InterpolatedExpression
 
 Expression
   = LogicalExpression
+  / ArrayLiteral
 
 
 LogicalExpression
@@ -255,12 +258,14 @@ BooleanLiteral
 
 ArrayLiteral
   = "array" _ "{" _ elements:ArrayElements? _ "}" {
+      console.log("Captured ArrayLiteral:", elements);
       return ArrayLiteral(elements !== null ? elements : []);
     }
 
 
 ArrayElements
   = head:Expression tail:(_ "," _ Expression)* {
+      console.log("Captured ArrayElements:", [head, ...tail.map(item => item[3])]);
       return [head, ...tail.map(item => item[3])];
     }
 

@@ -239,6 +239,9 @@ export class VerseInterpreter {
 			case 'BooleanLiteral':
 				result = expression.value;
 				break;
+			case "ArrayLiteral":
+				result = this.visitArrayLiteral(expression);
+				break;
 			case 'Identifier':
 				if (this.symbolTable.has(expression.name)) {
 					const variable = this.symbolTable.get(expression.name);

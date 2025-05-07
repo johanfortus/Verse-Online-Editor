@@ -25,7 +25,7 @@ const CodeEditor = ({ code, setCode, handleEditorMount, runCode }) => {
         </div>
     
             <Editor
-                height="80%"
+                height="100vh"
                 defaultLanguage="verse"
                 language='verse'
                 theme="verse-dark"

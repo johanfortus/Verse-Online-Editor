@@ -38,7 +38,7 @@ function App() {
 		<>
 			<Header />
 
-			<div style={{ display: 'flex', backgroundColor: 'lightgray', height: '100vh' }}>
+			<div style={{ display: 'flex', backgroundColor: 'lightgray' }}>
 				<Editor code={code} setCode={setCode} handleEditorMount={handleEditorMount} runCode={runCode} />
 				<Output output={output} />
 			</div>

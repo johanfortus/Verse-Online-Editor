@@ -22,7 +22,6 @@
 }
 
 .output-container {
-    height: 80%;
     overflow-y: scroll;
     color: white;
     padding-left: 5px;

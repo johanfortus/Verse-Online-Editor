@@ -252,6 +252,13 @@ export class VerseInterpreter {
 					throw new Error(`Undefined variable: ${expression.name}`);
 				}
 				break;
+			case 'ArrayLength':
+				const array = this.evaluateExpression(expression.array);
+				if (!Array.isArray(array)) {
+					throw new Error(`Cannot get .Length of a non-array value`);
+				}
+				result = array.length;
+				break;
 			case 'BinaryExpression':
 				result = this.evaluateBinaryExpression(expression);
 				break;

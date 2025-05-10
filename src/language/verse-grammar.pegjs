@@ -199,7 +199,12 @@ UnaryExpression
 
 
 PostfixExpression
-  = expression:PrimaryExpression "?" { return UnaryExpression("?", expression); }
+  = expression:PrimaryExpression "." "Length" { 
+      return { type: "ArrayLength", array: expression };
+    }
+  / expression:PrimaryExpression "?" {
+      return UnaryExpression("?", expression);
+  }
   / PrimaryExpression
 
 

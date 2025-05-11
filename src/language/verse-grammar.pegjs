@@ -113,7 +113,7 @@ PrintStatement
     }
 
 IfStatement
-  = "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ":" _ body:Statement+ {
+  = "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ":" _ body:Statement+ "end" _ {
       return IfStatement(condition, body);
     }
 
@@ -123,13 +123,13 @@ AssignmentExpression
   }
 
 LoopStatement
-  = "loop" _ ":" _ body:Statement+ {
+  = "loop" _ ":" _ body:Statement+ "end" _ {
       return LoopStatement(body);
     }
 
 
 ForStatement
-  = "for" _ "(" _ variable:Identifier _ ":=" _ start:Expression _ ".." _ end:Expression _ ")" _ ":" _ body:Statement+ {
+  = "for" _ "(" _ variable:Identifier _ ":=" _ start:Expression _ ".." _ end:Expression _ ")" _ ":" _ body:Statement+ "end" _ {
       return ForStatement(variable, start, end, body);
     }
     

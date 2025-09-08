@@ -35,6 +35,9 @@ export class VerseInterpreter {
 			case 'VariableDeclaration':
 				this.visitVariableDeclaration(statement);
 				break;
+			case 'ConstDeclaration':
+				this.visitConstDeclaration(statement);
+				break;
 			case 'SetStatement':
 				this.visitSetStatement(statement);
 				break;
@@ -71,7 +74,40 @@ export class VerseInterpreter {
 
 		const value = this.evaluateExpression(declaration.value);
 		console.log(`Declaring variable ${declaration.name.name} of type '${declaration.varType.name}' with value ${value} (Type: ${typeof value})`);
-		this.symbolTable.set(declaration.name.name, { type: declaration.varType.name, value });
+		this.symbolTable.set(declaration.name.name, { type: declaration.varType.name, value, isConstant: false });
+	}
+
+	visitConstDeclaration(declaration) {
+		const constName = declaration.name.name;
+		if (this.symbolTable.has(constName)) {
+			throw new Error(`Variable '${constName}' is already declared`);
+		}
+		const value = this.evaluateExpression(declaration.value);
+		let resolvedType;
+		if (declaration.constType && declaration.constType.name) {
+			resolvedType = declaration.constType.name;
+		}
+		else {
+			resolvedType = this.inferVerseTypeFromValue(value);
+		}
+		console.log(`Declaring constant ${constName} of type '${resolvedType}' with value ${value}`);
+		this.symbolTable.set(constName, { type: resolvedType, value, isConstant: true });
+	}
+
+	inferVerseTypeFromValue(value) {
+		if (Array.isArray(value)) {
+			return 'array';
+		}
+		switch (typeof value) {
+			case 'number':
+				return Number.isInteger(value) ? 'int' : 'float';
+			case 'string':
+				return 'string';
+			case 'boolean':
+				return 'logic';
+			default:
+				return 'dynamic';
+		}
 	}
 
 	visitSetStatement(setStatement) {
@@ -185,6 +221,9 @@ export class VerseInterpreter {
 			}
 
 			const newValue = this.evaluateExpression(setStatement.value);
+			if (array.isConstant) {
+				throw new Error(`Cannot modify constant '${arrayAccess.array.name}'`);
+			}
 			console.log(`Setting array ${arrayAccess.array.name} at index ${index} to value ${newValue}`);
 			array.value[index] = newValue;
 		}
@@ -192,20 +231,24 @@ export class VerseInterpreter {
 			const value = this.evaluateExpression(setStatement.value);
 			const varName = setStatement.name.name;
 			if (this.symbolTable.has(varName)) {
+				const entry = this.symbolTable.get(varName);
+				if (entry.isConstant) {
+					throw new Error(`Cannot reassign constant '${varName}'`);
+				}
 				let newValue;
 				switch (setStatement.operator) {
 					case '=':
 						newValue = value;
 						break;
 					case '+=':
-						const currentValue = this.symbolTable.get(varName).value;
+						const currentValue = entry.value;
 						newValue = currentValue + value;
 						break;
 					default:
 						throw new Error(`Unsupported assignment operator: ${setStatement.operator}`);
 				}
 				console.log(`Setting variable ${varName} to value ${newValue}`);
-				this.symbolTable.set(varName, { ...this.symbolTable.get(varName), value: newValue });
+				this.symbolTable.set(varName, { ...entry, value: newValue });
 			}
 			else {
 				throw new Error(`Cannot set undeclared variable: ${varName}`);

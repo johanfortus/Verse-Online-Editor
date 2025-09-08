@@ -15,6 +15,8 @@
   
   function VariableDeclaration(name, varType, value) { return { type: "VariableDeclaration", name: name, varType: varType, value: value }; }
 
+  function ConstDeclaration(name, constType, value) { return { type: "ConstDeclaration", name: name, constType: constType, value: value }; }
+
   function SetStatement(name, operator, value) { return { type: "SetStatement", name: name, operator: operator, value: value }; }
 
   function PrintStatement(value) { return { type: "PrintStatement", value: value }; }
@@ -78,6 +80,7 @@ Program
 // Defines a statement like variable declaration, set statements, loops, etc.
 Statement
   = VariableDeclaration
+  / ConstDeclaration
   / SetStatement
   / PrintStatement
   / IfStatement
@@ -95,10 +98,18 @@ ReservedKeyword
   = "array"
 
 VariableDeclaration
-  = ("var" _)? name:Identifier _ ":" _ varType:(Type / ArrayType) _ "=" _ value:Expression _ {
+  = "var" _ name:Identifier _ ":" _ varType:(Type / ArrayType) _ "=" _ value:Expression _ {
       console.log(`Variable Declaration - Name: ${name.name}, Type: ${varType.type}`);
       return VariableDeclaration(name, varType, value);
     }
+
+ConstDeclaration
+  = name:Identifier _ ":=" _ value:Expression _ {
+    return ConstDeclaration(name, null, value);
+  }
+  / name:Identifier _ ":" _ constType:(Type / ArrayType) _ "=" _ value:Expression _ {
+    return ConstDeclaration(name, constType, value);
+  }
 
 
 SetStatement

@@ -110,30 +110,6 @@ export class VerseInterpreter {
 		}
 	}
 
-	visitSetStatement(setStatement) {
-		const value = this.evaluateExpression(setStatement.value);
-		const varName = setStatement.name.name;
-		if (this.symbolTable.has(varName)) {
-			let newValue;
-			switch (setStatement.operator) {
-				case '=':
-					newValue = value;
-					break;
-				case '+=':
-					const currentValue = this.symbolTable.get(varName).value;
-					newValue = currentValue + value;
-					break;
-				default:
-					throw new Error(`Unsupported assignment operator: ${setStatement.operator}`);
-			}
-			console.log(`Setting variable ${varName} to value ${newValue}`);
-			this.symbolTable.set(varName, { ...this.symbolTable.get(varName), value: newValue });
-		}
-		else {
-			throw new Error(`Cannot set undeclared variable: ${varName}`);
-		}
-	}
-
 	visitPrintStatement(printStatement) {
 		try {
 			const value = this.evaluateInterpolatedString(printStatement.value);

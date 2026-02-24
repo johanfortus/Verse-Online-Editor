@@ -1,13 +1,13 @@
-# Verse Compiler
+# Verse Online Editor
 A work-in-progress, offline-ready Verse code playground built with React and Monaco Editor for learning, parsing, and interpreting Verse scripts in the browser without UEFN integration.
 
 ## 📌 Summary
 
-The Verse Compiler is a lightweight, browser-based environment for writing and interpreting Verse, the programming language used in Unreal Engine for Fortnite (UEFN). Designed for learning and experimentation, this playground helps users understand Verse syntax and semantics without the need to open Unreal Editor or deploy a map.
+The Verse Online Editor is a lightweight, browser-based environment for writing and interpreting Verse, the programming language used in Unreal Engine for Fortnite (UEFN). Designed for learning and experimentation, this playground helps users understand Verse syntax and semantics without the need to open Unreal Editor or deploy a map.
 
 The project runs without UEFN integration and executes Verse code as if inside an `OnBegin()` block, making it ideal for experimentation, logic testing, and syntax familiarization.
 
-The Verse Compiler currently supports only a subset of core language features such as variables, loops, conditionals, expressions, and arrays — advanced constructs like classes, functions, or UEFN-specific APIs are not yet implemented.
+The Verse Online Editor currently supports only a subset of core language features such as variables, loops, conditionals, expressions, and arrays — advanced constructs like classes, functions, or UEFN-specific APIs are not yet implemented.
 
 🔧 **Currently Supported:**
 
@@ -55,4 +55,4 @@ $ npm run dev
 - [<img src="https://github.com/user-attachments/assets/b1ee7389-af66-475b-b100-90e4115459ca" height="27.99" />](https://github.com/pegjs/pegjs)
 
 ## 📸 Demonstration
-<img width="1504" alt="Verse Compiler Demo" src="https://github.com/user-attachments/assets/e0d26a71-b2e4-49ea-ac8e-92bee20c308a" />
+<img width="1504" alt="Verse Online Editor Demo" src="https://github.com/user-attachments/assets/e0d26a71-b2e4-49ea-ac8e-92bee20c308a" />

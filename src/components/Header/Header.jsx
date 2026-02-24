@@ -6,7 +6,7 @@ const Header = () => {
     return (
         <div className="header-container">
             <img src={logo} className='logo-icon'></img>
-            <span className='logo-title'>Verse Compiler</span>
+            <span className='logo-title'>Verse Online Editor</span>
         </div>
     );
 };

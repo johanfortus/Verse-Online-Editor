@@ -61,6 +61,16 @@
 
   function ArrayElements(head, tail) { return [head, ...tail.map(item => item[3])]; }
 
+  function FunctionDeclaration(name, parameters, returnType, body) { return { type: "FunctionDeclaration", name: name, parameters: parameters, returnType: returnType, body: body }; }
+
+  function Parameter(name, paramType) { return { type: "Parameter", name: name, paramType: paramType }; }
+
+  function FunctionCall(name, args) { return { type: "FunctionCall", name: name, arguments: args }; }
+
+  function ReturnStatement(value) { return { type: "ReturnStatement", value: value }; }
+
+  function FunctionCallStatement(functionCall) { return { type: "FunctionCallStatement", functionCall: functionCall }; }
+
 }
 
 
@@ -79,7 +89,8 @@ Program
 
 // Defines a statement like variable declaration, set statements, loops, etc.
 Statement
-  = VariableDeclaration
+  = FunctionDeclaration
+  / VariableDeclaration
   / ConstDeclaration
   / SetStatement
   / PrintStatement
@@ -87,6 +98,8 @@ Statement
   / LoopStatement
   / ForStatement
   / BreakStatement
+  / ReturnStatement
+  / FunctionCallStatement
 
 Identifier
   = !ReservedKeyword h:[a-zA-Z_] t:[a-zA-Z0-9_]* {
@@ -96,6 +109,7 @@ Identifier
 
 ReservedKeyword
   = "array"
+  / "return"
 
 VariableDeclaration
   = "var" _ name:Identifier _ ":" _ varType:(Type / ArrayType) _ "=" _ value:Expression _ {
@@ -229,7 +243,8 @@ PostfixExpression
 
 
 PrimaryExpression
-  = StringLiteral
+  = FunctionCall
+  / StringLiteral
   / FloatLiteral
   / IntegerLiteral
   / BooleanLiteral
@@ -311,10 +326,51 @@ ArrayAccess
 
 
 Type
-  = name:$("float" / "int" / "string" / "logic") { 
+  = name:$("float" / "int" / "string" / "logic" / "void") { 
       console.log("Captured Type: ", name);
       return { type: "Type", name };
    }
+
+
+FunctionDeclaration
+  = name:Identifier _ "(" _ parameters:ParameterList? _ ")" _ ":" _ returnType:(Type / ArrayType) _ "=" _ body:Statement+ "end" _ {
+      return FunctionDeclaration(name, parameters || [], returnType, body);
+    }
+
+ParameterList
+  = head:Parameter tail:(_ "," _ Parameter)* {
+      return [head, ...tail.map(item => item[3])];
+    }
+
+Parameter
+  = name:Identifier _ ":" _ paramType:(Type / ArrayType) {
+      return Parameter(name, paramType);
+    }
+
+ReturnType
+  = returnType:(Type / ArrayType) {
+      return returnType;
+    }
+
+FunctionCall
+  = name:Identifier _ "(" _ args:ArgumentList? _ ")" {
+      return FunctionCall(name, args || []);
+    }
+
+ArgumentList
+  = head:Expression tail:(_ "," _ Expression)* {
+      return [head, ...tail.map(item => item[3])];
+    }
+
+ReturnStatement
+  = "return" _ value:Expression? _ {
+      return ReturnStatement(value);
+    }
+
+FunctionCallStatement
+  = functionCall:FunctionCall _ {
+      return FunctionCallStatement(functionCall);
+    }
 
 
 _ "whitespace"

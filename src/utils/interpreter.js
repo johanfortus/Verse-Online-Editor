@@ -9,6 +9,9 @@ export class VerseInterpreter {
 		this.output = '';
 		this.symbolTable = new Map();
 		this.breakEncountered = false;
+		this.functionTable = new Map();
+		this.returnValue = null;
+		this.returnEncountered = false;
 	}
 
 	interpret(ast) {
@@ -32,6 +35,9 @@ export class VerseInterpreter {
 	visitStatement(statement) {
 		console.log('Visiting statement:', JSON.stringify(statement, null, 2));
 		switch (statement.type) {
+			case 'FunctionDeclaration':
+				this.visitFunctionDeclaration(statement);
+				break;
 			case 'VariableDeclaration':
 				this.visitVariableDeclaration(statement);
 				break;
@@ -55,6 +61,12 @@ export class VerseInterpreter {
 				break;
 			case 'BreakStatement':
 				this.visitBreakStatement();
+				break;
+			case 'ReturnStatement':
+				this.visitReturnStatement(statement);
+				break;
+			case 'FunctionCallStatement':
+				this.visitFunctionCallStatement(statement);
 				break;
 			default:
 				throw new Error(`Unsupported statement type: ${statement.type}`);
@@ -300,6 +312,9 @@ export class VerseInterpreter {
 				const end = this.evaluateExpression(expression.end);
 				result = { type: 'Range', start, end };
 				break;
+			case 'FunctionCall':
+				result = this.visitFunctionCall(expression);
+				break;
 			default:
 				throw new Error(`Unsupported expression type: ${expression.type}`);
 		}
@@ -334,5 +349,88 @@ export class VerseInterpreter {
 			default:
 				throw new Error(`Unsupported unary operator: ${expression.operator}`);
 		}
+	}
+
+		visitFunctionDeclaration(functionDeclaration) {
+		const functionName = functionDeclaration.name.name;
+		console.log(`Declaring function: ${functionName}`);
+		
+		// Store the function definition
+		this.functionTable.set(functionName, {
+			name: functionName,
+			parameters: functionDeclaration.parameters,
+			returnType: functionDeclaration.returnType,
+			body: functionDeclaration.body
+		});
+	}
+
+	visitFunctionCall(functionCall) {
+		const functionName = functionCall.name.name;
+		console.log(`Calling function: ${functionName}`);
+		
+		// Check if function exists
+		if (!this.functionTable.has(functionName)) {
+			throw new Error(`Function '${functionName}' is not defined`);
+		}
+		
+		const functionDef = this.functionTable.get(functionName);
+		
+		// Evaluate arguments
+		const args = functionCall.arguments.map(arg => this.evaluateExpression(arg));
+		
+		// Check parameter count
+		if (args.length !== functionDef.parameters.length) {
+			throw new Error(`Function '${functionName}' expects ${functionDef.parameters.length} arguments, but ${args.length} were provided`);
+		}
+		
+		// Create new scope for function execution
+		const originalSymbolTable = new Map(this.symbolTable);
+		this.returnEncountered = false;
+		this.returnValue = null;
+		
+		try {
+			// Set up parameters in the new scope
+			for (let i = 0; i < functionDef.parameters.length; i++) {
+				const param = functionDef.parameters[i];
+				const argValue = args[i];
+				const paramType = param.paramType.name;
+				
+				this.symbolTable.set(param.name.name, {
+					type: paramType,
+					value: argValue,
+					isConstant: true // Parameters are read-only
+				});
+			}
+			
+			// Execute function body
+			for (const statement of functionDef.body) {
+				this.visitStatement(statement);
+				if (this.returnEncountered) {
+					break;
+				}
+			}
+			
+			return this.returnValue;
+		} finally {
+			// Restore original scope
+			this.symbolTable = originalSymbolTable;
+			this.returnEncountered = false;
+			this.returnValue = null;
+		}
+	}
+
+	visitReturnStatement(returnStatement) {
+		console.log('Executing return statement');
+		this.returnEncountered = true;
+		if (returnStatement.value) {
+			this.returnValue = this.evaluateExpression(returnStatement.value);
+		} else {
+			this.returnValue = null;
+		}
+	}
+
+	visitFunctionCallStatement(functionCallStatement) {
+		console.log('Executing function call statement');
+		this.visitFunctionCall(functionCallStatement.functionCall);
 	}
 }

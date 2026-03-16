@@ -29,12 +29,31 @@ export class VerseInterpreter {
 		}
 
 		this.visitProgram(ast);
+		this.runDeviceEntrypoints();
 		return this.output;
 	}
 
 	visitProgram(program) {
 		for (const statement of program.body) {
 			this.visitStatement(statement);
+		}
+	}
+
+	runDeviceEntrypoints() {
+		for (const symbol of this.symbolTable.values()) {
+			if (symbol.type !== 'ClassSymbol' || symbol.parent !== 'creative_device') {
+				continue;
+			}
+
+			const onBeginMethod = symbol.members.find(member =>
+				member.type === 'FunctionDeclaration' && member.name.name === 'OnBegin'
+			);
+
+			if (!onBeginMethod) {
+				continue;
+			}
+
+			this.invokeStoredFunction(onBeginMethod, []);
 		}
 	}
 
@@ -438,52 +457,53 @@ export class VerseInterpreter {
 		}
 		
 		const functionDef = this.functionTable.get(functionName);
-		
-		// Check parameter count
+
+		return this.invokeStoredFunction(functionDef, args);
+	}
+
+	invokeStoredFunction(functionDef, args) {
+		const functionName = functionDef.name.name;
+
 		if (args.length !== functionDef.parameters.length) {
 			throw new Error(`Function '${functionName}' expects ${functionDef.parameters.length} arguments, but ${args.length} were provided`);
 		}
-		
-		// Create new scope for function execution
+
 		const originalSymbolTable = new Map(this.symbolTable);
 		this.returnEncountered = false;
 		this.returnValue = null;
 		const originalLastExpressionValue = this.lastExpressionValue;
 		this.lastExpressionValue = null;
-		
+
 		try {
-			// Set up parameters in the new scope
 			for (let i = 0; i < functionDef.parameters.length; i++) {
 				const param = functionDef.parameters[i];
 				const argValue = args[i];
 				const paramType = param.paramType.name;
-				
+
 				this.symbolTable.set(param.name.name, {
 					type: paramType,
 					value: argValue,
-					isConstant: true // Parameters are read-only
+					isConstant: true
 				});
 			}
-			
-			// Execute function body
+
 			for (const statement of functionDef.body) {
 				this.visitStatement(statement);
 				if (this.returnEncountered) {
 					break;
 				}
 			}
-			
+
 			if (this.returnEncountered) {
 				return this.returnValue;
 			}
 
-			if (functionDef.effects.includes('decides')) {
+			if ((functionDef.effects || []).includes('decides')) {
 				return Boolean(this.lastExpressionValue);
 			}
 
 			return this.lastExpressionValue;
 		} finally {
-			// Restore original scope
 			this.symbolTable = originalSymbolTable;
 			this.returnEncountered = false;
 			this.returnValue = null;

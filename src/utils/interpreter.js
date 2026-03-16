@@ -12,6 +12,11 @@ export class VerseInterpreter {
 		this.functionTable = new Map();
 		this.returnValue = null;
 		this.returnEncountered = false;
+
+		this.symbolTable.set('creative_device', {
+			type: 'NativeClass',
+			name: 'creative_device',
+		});
 	}
 
 	interpret(ast) {
@@ -43,6 +48,9 @@ export class VerseInterpreter {
 				break;
 			case 'ConstDeclaration':
 				this.visitConstDeclaration(statement);
+				break;
+			case 'ClassDefinition':
+				this.visitClassDefinition(statement);
 				break;
 			case 'SetStatement':
 				this.visitSetStatement(statement);
@@ -104,6 +112,27 @@ export class VerseInterpreter {
 		}
 		console.log(`Declaring constant ${constName} of type '${resolvedType}' with value ${value}`);
 		this.symbolTable.set(constName, { type: resolvedType, value, isConstant: true });
+	}
+
+	visitClassDefinition(classDefinition) {
+		const className = classDefinition.name.name;
+		const parentClassName = classDefinition.parentClass.name;
+		const parentClass = this.symbolTable.get(parentClassName);
+
+		if (!parentClass || (parentClass.type !== 'NativeClass' && parentClass.type !== 'ClassSymbol')) {
+			throw new Error(`Unknown parent class: ${parentClassName}`);
+		}
+
+		if (this.symbolTable.has(className)) {
+			throw new Error(`Variable '${className}' is already declared`);
+		}
+
+		this.symbolTable.set(className, {
+			type: 'ClassSymbol',
+			name: className,
+			parent: parentClassName,
+			members: classDefinition.members,
+		});
 	}
 
 	inferVerseTypeFromValue(value) {

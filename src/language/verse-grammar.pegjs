@@ -17,6 +17,8 @@
 
   function ConstDeclaration(name, constType, value) { return { type: "ConstDeclaration", name: name, constType: constType, value: value }; }
 
+  function ClassDefinition(name, parentClass, members) { return { type: "ClassDefinition", name: name, parentClass: parentClass, members: members }; }
+
   function SetStatement(name, operator, value) { return { type: "SetStatement", name: name, operator: operator, value: value }; }
 
   function PrintStatement(value) { return { type: "PrintStatement", value: value }; }
@@ -91,6 +93,7 @@ Program
 Statement
   = FunctionDeclaration
   / VariableDeclaration
+  / ClassDefinition
   / ConstDeclaration
   / SetStatement
   / PrintStatement
@@ -124,6 +127,12 @@ ConstDeclaration
   / name:Identifier _ ":" _ constType:(Type / ArrayType) _ "=" _ value:Expression _ {
     return ConstDeclaration(name, constType, value);
   }
+
+
+ClassDefinition
+  = name:Identifier _ ":=" _ "class" _ "(" _ parentClass:Identifier _ ")" _ ":" _ members:Statement+ "end" _ {
+      return ClassDefinition(name, parentClass, members);
+    }
 
 
 SetStatement

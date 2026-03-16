@@ -4,12 +4,13 @@
 // PEG.js generates parser.js, and given code input, constructs an AST following the defined grammar rules.
 // The AST is then used by this interpreter to execute the program logic.
 
-import { getImportedSymbols } from './verseLibraries.js';
+import { getImportedRuntimeBindings, getImportedSymbols } from './verseLibraries.js';
 
 export class VerseInterpreter {
 	constructor() {
 		this.output = '';
 		this.symbolTable = new Map();
+		this.nativeFunctionTable = new Map();
 		this.breakEncountered = false;
 		this.functionTable = new Map();
 		this.currentMethodTable = null;
@@ -20,6 +21,13 @@ export class VerseInterpreter {
 
 	interpret(ast) {
 		this.output = '';
+		this.symbolTable = new Map();
+		this.nativeFunctionTable = new Map();
+		this.functionTable = new Map();
+		this.currentMethodTable = null;
+		this.returnValue = null;
+		this.returnEncountered = false;
+		this.lastExpressionValue = null;
 		console.log('Interpreter received AST:', JSON.stringify(ast, null, 2));
 
 		if (!ast || typeof ast !== 'object' || !Array.isArray(ast.body)) {
@@ -37,9 +45,16 @@ export class VerseInterpreter {
 			.filter(statement => statement.type === 'UsingDeclaration')
 			.map(statement => statement.path);
 		const importedSymbols = getImportedSymbols(importPaths);
+		const runtimeBindings = getImportedRuntimeBindings(importPaths);
 
 		for (const [symbolName, symbol] of importedSymbols.entries()) {
-			this.symbolTable.set(symbolName, symbol);
+			if (symbol.type !== 'NativeFunction') {
+				this.symbolTable.set(symbolName, symbol);
+			}
+		}
+
+		for (const [symbolName, nativeFunction] of runtimeBindings.nativeFunctions.entries()) {
+			this.nativeFunctionTable.set(symbolName, nativeFunction);
 		}
 	}
 
@@ -340,17 +355,18 @@ export class VerseInterpreter {
 					throw new Error(`Cannot reassign constant '${varName}'`);
 				}
 				let newValue;
-				switch (setStatement.operator) {
-					case '=':
-						newValue = value;
-						break;
-					case '+=':
-						const currentValue = entry.value;
-						newValue = currentValue + value;
-						break;
-					default:
-						throw new Error(`Unsupported assignment operator: ${setStatement.operator}`);
-				}
+					switch (setStatement.operator) {
+						case '=':
+							newValue = value;
+							break;
+						case '+=': {
+							const currentValue = entry.value;
+							newValue = currentValue + value;
+							break;
+						}
+						default:
+							throw new Error(`Unsupported assignment operator: ${setStatement.operator}`);
+					}
 				console.log(`Setting variable ${varName} to value ${newValue}`);
 				this.symbolTable.set(varName, { ...entry, value: newValue });
 			}
@@ -401,31 +417,34 @@ export class VerseInterpreter {
 					throw new Error(`Undefined variable: ${expression.name}`);
 				}
 				break;
-			case 'ArrayLength':
-				const array = this.evaluateExpression(expression.array);
-				if (!Array.isArray(array)) {
-					throw new Error(`Cannot get .Length of a non-array value`);
+				case 'ArrayLength': {
+					const array = this.evaluateExpression(expression.array);
+					if (!Array.isArray(array)) {
+						throw new Error(`Cannot get .Length of a non-array value`);
+					}
+					result = array.length;
+					break;
 				}
-				result = array.length;
-				break;
-			case 'ArrayAccess':
-				result = this.visitArrayAccess(expression);
-				break;
+				case 'ArrayAccess':
+					result = this.visitArrayAccess(expression);
+					break;
 			case 'BinaryExpression':
 				result = this.evaluateBinaryExpression(expression);
 				break;
 			case 'UnaryExpression':
 				result = this.evaluateUnaryExpression(expression);
 				break;
-			case 'AssignmentExpression':
-				const value = this.evaluateExpression(expression.value);
-				this.symbolTable.set(expression.variable.name, { type: "dynamic", value });
-				return value;
-			case 'Range':
-				const start = this.evaluateExpression(expression.start);
-				const end = this.evaluateExpression(expression.end);
-				result = { type: 'Range', start, end };
-				break;
+				case 'AssignmentExpression': {
+					const value = this.evaluateExpression(expression.value);
+					this.symbolTable.set(expression.variable.name, { type: "dynamic", value });
+					return value;
+				}
+				case 'Range': {
+					const start = this.evaluateExpression(expression.start);
+					const end = this.evaluateExpression(expression.end);
+					result = { type: 'Range', start, end };
+					break;
+				}
 			case 'FunctionCall':
 				result = this.visitFunctionCall(expression);
 				break;
@@ -488,6 +507,17 @@ export class VerseInterpreter {
 		const args = functionCall.arguments.map(arg => this.evaluateExpression(arg));
 
 		if (!this.functionTable.has(functionName)) {
+			if (this.nativeFunctionTable.has(functionName)) {
+				const nativeFunction = this.nativeFunctionTable.get(functionName);
+				if (args.length !== nativeFunction.parameters.length) {
+					throw new Error(
+						`Function '${functionName}' expects ${nativeFunction.parameters.length} arguments, but ${args.length} were provided`
+					);
+				}
+
+				return nativeFunction.invoke(...args);
+			}
+
 			if (this.currentMethodTable?.has(functionName)) {
 				const methodDef = this.currentMethodTable.get(functionName);
 				return this.invokeStoredFunction(methodDef, args, this.currentMethodTable);

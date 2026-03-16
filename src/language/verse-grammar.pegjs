@@ -360,14 +360,15 @@ Type
 
 
 FunctionDeclaration
-  = name:Identifier effects:EffectSpecifier* _ "(" _ parameters:ParameterList? _ ")" _
+  = name:Identifier preEffects:EffectSpecifier* _ "(" _ parameters:ParameterList? _ ")" _? postEffects:EffectSpecifier* _
     ":" _ returnType:(Type / ArrayType) _ "=" _ body:Statement+ "end" _ {
-      return FunctionDeclaration(name, parameters || [], returnType, body, effects);
-    }
-  / name:Identifier _ "(" _ parameters:ParameterList? _ ")" _
-    effects:(_ EffectSpecifier)* _
-    ":" _ returnType:(Type / ArrayType) _ "=" _ body:Statement+ "end" _ {
-      return FunctionDeclaration(name, parameters || [], returnType, body, effects.map(e => e[1]));
+      return FunctionDeclaration(
+        name,
+        parameters || [],
+        returnType,
+        body,
+        [...preEffects, ...postEffects]
+      );
     }
 
 EffectSpecifier

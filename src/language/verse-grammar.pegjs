@@ -45,7 +45,7 @@
 
   function UnaryExpression(operator, expression) { return { type: "UnaryExpression", operator: operator, expression: expression }; }
 
-  function IfStatement(condition, body) { return { type: "IfStatement", condition: condition, body: body }; }
+  function IfStatement(condition, body, elseBody) { return { type: "IfStatement", condition: condition, body: body, elseBody: elseBody || [] }; }
 
   function LoopStatement(body) { return { type: "LoopStatement", body: body }; }
 
@@ -72,6 +72,8 @@
   function ReturnStatement(value) { return { type: "ReturnStatement", value: value }; }
 
   function FunctionCallStatement(functionCall) { return { type: "FunctionCallStatement", functionCall: functionCall }; }
+
+  function ExpressionStatement(expression) { return { type: "ExpressionStatement", expression: expression }; }
 
 }
 
@@ -103,6 +105,7 @@ Statement
   / BreakStatement
   / ReturnStatement
   / FunctionCallStatement
+  / ExpressionStatement
 
 Identifier
   = !ReservedKeyword h:[a-zA-Z_] t:[a-zA-Z0-9_]* {
@@ -112,7 +115,19 @@ Identifier
 
 ReservedKeyword
   = "array"
+  / "break"
+  / "class"
+  / "else"
+  / "end"
+  / "false"
+  / "for"
+  / "if"
+  / "loop"
+  / "Print"
   / "return"
+  / "set"
+  / "true"
+  / "var"
 
 VariableDeclaration
   = "var" _ name:Identifier _ ":" _ varType:(Type / ArrayType) _ "=" _ value:Expression _ {
@@ -147,8 +162,11 @@ PrintStatement
     }
 
 IfStatement
-  = "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ":" _ body:Statement+ "end" _ {
-      return IfStatement(condition, body);
+  = "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ":" _ body:Statement+ _ "else" _ ":" _ elseBody:Statement+ "end" _ {
+      return IfStatement(condition, body, elseBody);
+    }
+  / "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ":" _ body:Statement+ !(_ "else") "end" _ {
+      return IfStatement(condition, body, []);
     }
 
 AssignmentExpression
@@ -342,7 +360,11 @@ Type
 
 
 FunctionDeclaration
-  = name:Identifier _ "(" _ parameters:ParameterList? _ ")" _
+  = name:Identifier effects:EffectSpecifier* _ "(" _ parameters:ParameterList? _ ")" _
+    ":" _ returnType:(Type / ArrayType) _ "=" _ body:Statement+ "end" _ {
+      return FunctionDeclaration(name, parameters || [], returnType, body, effects);
+    }
+  / name:Identifier _ "(" _ parameters:ParameterList? _ ")" _
     effects:(_ EffectSpecifier)* _
     ":" _ returnType:(Type / ArrayType) _ "=" _ body:Statement+ "end" _ {
       return FunctionDeclaration(name, parameters || [], returnType, body, effects.map(e => e[1]));
@@ -370,6 +392,9 @@ FunctionCall
   = name:Identifier _ "(" _ args:ArgumentList? _ ")" {
       return FunctionCall(name, args || []);
     }
+  / name:Identifier "[" _ args:ArgumentList? _ "]" {
+      return FunctionCall(name, args || []);
+    }
 
 ArgumentList
   = head:Expression tail:(_ "," _ Expression)* {
@@ -384,6 +409,11 @@ ReturnStatement
 FunctionCallStatement
   = functionCall:FunctionCall _ {
       return FunctionCallStatement(functionCall);
+    }
+
+ExpressionStatement
+  = expression:Expression _ {
+      return ExpressionStatement(expression);
     }
 
 

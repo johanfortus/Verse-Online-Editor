@@ -6,9 +6,14 @@ export function injectEnds(sourceCode) {
     for(const raw of lines) {
         const indentWidth = (/^[ \t]*/.exec(raw)[0]).length;
         const isBlankLine = /^\s*$/.test(raw);
+        const trimmed = raw.trim();
+        const startsElseClause = trimmed === 'else:';
 
         if(!isBlankLine) {
-            while (indentWidth < indentStack[indentStack.length - 1]) {
+            while (
+                indentWidth < indentStack[indentStack.length - 1] &&
+                !startsElseClause
+            ) {
                 indentStack.pop();
                 outputLines.push('end');
             }

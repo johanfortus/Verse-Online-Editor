@@ -12,6 +12,7 @@ export class VerseInterpreter {
 		this.functionTable = new Map();
 		this.returnValue = null;
 		this.returnEncountered = false;
+		this.lastExpressionValue = null;
 
 		this.symbolTable.set('creative_device', {
 			type: 'NativeClass',
@@ -75,6 +76,9 @@ export class VerseInterpreter {
 				break;
 			case 'FunctionCallStatement':
 				this.visitFunctionCallStatement(statement);
+				break;
+			case 'ExpressionStatement':
+				this.visitExpressionStatement(statement);
 				break;
 			default:
 				throw new Error(`Unsupported statement type: ${statement.type}`);
@@ -170,6 +174,16 @@ export class VerseInterpreter {
 				this.visitStatement(statement);
 			}
 		}
+		else {
+			for (const statement of ifStatement.elseBody || []) {
+				this.visitStatement(statement);
+			}
+		}
+	}
+
+	visitExpressionStatement(expressionStatement) {
+		this.lastExpressionValue = this.evaluateExpression(expressionStatement.expression);
+		return this.lastExpressionValue;
 	}
 
 	visitLoopStatement(loopStatement) {
@@ -397,16 +411,33 @@ export class VerseInterpreter {
 	visitFunctionCall(functionCall) {
 		const functionName = functionCall.name.name;
 		console.log(`Calling function: ${functionName}`);
-		
-		// Check if function exists
+
+		// Evaluate arguments once so bracket syntax can resolve to either function calls
+		// or array indexing based on the symbol type at runtime.
+		const args = functionCall.arguments.map(arg => this.evaluateExpression(arg));
+
 		if (!this.functionTable.has(functionName)) {
+			const symbol = this.symbolTable.get(functionName);
+			if (symbol && Array.isArray(symbol.value)) {
+				if (args.length !== 1) {
+					throw new Error(`Array '${functionName}' expects exactly one index, but ${args.length} were provided`);
+				}
+
+				const index = args[0];
+				if (!Number.isInteger(index)) {
+					throw new Error(`Array index for '${functionName}' must be an integer`);
+				}
+				if (index < 0 || index >= symbol.value.length) {
+					throw new Error(`Index out of bounds: ${index}`);
+				}
+
+				return symbol.value[index];
+			}
+
 			throw new Error(`Function '${functionName}' is not defined`);
 		}
 		
 		const functionDef = this.functionTable.get(functionName);
-		
-		// Evaluate arguments
-		const args = functionCall.arguments.map(arg => this.evaluateExpression(arg));
 		
 		// Check parameter count
 		if (args.length !== functionDef.parameters.length) {
@@ -417,6 +448,8 @@ export class VerseInterpreter {
 		const originalSymbolTable = new Map(this.symbolTable);
 		this.returnEncountered = false;
 		this.returnValue = null;
+		const originalLastExpressionValue = this.lastExpressionValue;
+		this.lastExpressionValue = null;
 		
 		try {
 			// Set up parameters in the new scope
@@ -440,12 +473,21 @@ export class VerseInterpreter {
 				}
 			}
 			
-			return this.returnValue;
+			if (this.returnEncountered) {
+				return this.returnValue;
+			}
+
+			if (functionDef.effects.includes('decides')) {
+				return Boolean(this.lastExpressionValue);
+			}
+
+			return this.lastExpressionValue;
 		} finally {
 			// Restore original scope
 			this.symbolTable = originalSymbolTable;
 			this.returnEncountered = false;
 			this.returnValue = null;
+			this.lastExpressionValue = originalLastExpressionValue;
 		}
 	}
 

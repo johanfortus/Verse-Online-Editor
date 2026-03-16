@@ -54,16 +54,29 @@ function toRegExp(pattern) {
 	return pattern ? new RegExp(pattern) : undefined;
 }
 
+function normalizePair(pair) {
+	if (Array.isArray(pair)) {
+		const [open, close] = pair;
+		return { open, close };
+	}
+
+	return pair;
+}
+
 function getAutoClosingPairs() {
-	return languageConfiguration.autoClosingPairs
+	const pairs = languageConfiguration.autoClosingPairs
 		?? languageConfiguration['autoClosingPairs-disabled']
 		?? [];
+
+	return pairs.map(normalizePair);
 }
 
 function getSurroundingPairs() {
-	return languageConfiguration.surroundingPairs
+	const pairs = languageConfiguration.surroundingPairs
 		?? languageConfiguration['surroundingPairs-disabled']
 		?? [];
+
+	return pairs.map(normalizePair);
 }
 
 function getMostSpecificScope(scopes) {

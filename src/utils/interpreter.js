@@ -389,7 +389,8 @@ export class VerseInterpreter {
 			name: functionName,
 			parameters: functionDeclaration.parameters,
 			returnType: functionDeclaration.returnType,
-			body: functionDeclaration.body
+			body: functionDeclaration.body,
+			effects: functionDeclaration.effects || [],
 		});
 	}
 

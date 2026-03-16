@@ -63,7 +63,7 @@
 
   function ArrayElements(head, tail) { return [head, ...tail.map(item => item[3])]; }
 
-  function FunctionDeclaration(name, parameters, returnType, body) { return { type: "FunctionDeclaration", name: name, parameters: parameters, returnType: returnType, body: body }; }
+  function FunctionDeclaration(name, parameters, returnType, body, effects) { return { type: "FunctionDeclaration", name: name, parameters: parameters, returnType: returnType, body: body, effects: effects || [] }; }
 
   function Parameter(name, paramType) { return { type: "Parameter", name: name, paramType: paramType }; }
 
@@ -342,9 +342,14 @@ Type
 
 
 FunctionDeclaration
-  = name:Identifier _ "(" _ parameters:ParameterList? _ ")" _ ":" _ returnType:(Type / ArrayType) _ "=" _ body:Statement+ "end" _ {
-      return FunctionDeclaration(name, parameters || [], returnType, body);
+  = name:Identifier _ "(" _ parameters:ParameterList? _ ")" _
+    effects:(_ EffectSpecifier)* _
+    ":" _ returnType:(Type / ArrayType) _ "=" _ body:Statement+ "end" _ {
+      return FunctionDeclaration(name, parameters || [], returnType, body, effects.map(e => e[1]));
     }
+
+EffectSpecifier
+  = "<" _ name:Identifier _ ">" { return name.name; }
 
 ParameterList
   = head:Parameter tail:(_ "," _ Parameter)* {

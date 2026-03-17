@@ -376,8 +376,8 @@ ArrayElements
 
 
 ArrayType
-  = "[]" Type {
-      return { type: "ArrayType", elementType: Type };
+  = "[]" elementType:Type {
+      return { type: "ArrayType", elementType };
     }
 
 

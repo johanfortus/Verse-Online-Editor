@@ -55,15 +55,38 @@ class Scope {
 
 		return this.parent ? this.parent.has(name) : false;
 	}
+
+	lookup(name) {
+		if (this.symbols.has(name)) {
+			return this.symbols.get(name);
+		}
+
+		return this.parent ? this.parent.lookup(name) : null;
+	}
 }
 
 function collectTopLevelDeclaration(statement, scope) {
 	switch (statement.type) {
 		case 'VariableDeclaration':
+			scope.define(statement.name.name, {
+				type: statement.type,
+				verseType: resolveDeclaredType(statement.varType),
+			});
+			break;
 		case 'ConstDeclaration':
+			scope.define(statement.name.name, {
+				type: statement.type,
+				verseType: resolveDeclaredType(statement.constType),
+			});
+			break;
 		case 'ClassDefinition':
-		case 'FunctionDeclaration':
 			scope.define(statement.name.name, { type: statement.type });
+			break;
+		case 'FunctionDeclaration':
+			scope.define(statement.name.name, {
+				type: statement.type,
+				returnType: resolveDeclaredType(statement.returnType),
+			});
 			break;
 		default:
 			break;
@@ -91,7 +114,13 @@ function analyzeStatement(statement, scope) {
 			analyzeSetStatement(statement, scope);
 			return;
 		case 'PrintStatement':
+			if (statement.value.type === 'InterpolatedString') {
+				analyzeExpression(statement.value, scope);
+				return;
+			}
+
 			analyzeExpression(statement.value, scope);
+			ensureStringConvertible(statement.value, scope);
 			return;
 		case 'IfStatement':
 			analyzeExpression(statement.condition, scope);
@@ -140,7 +169,10 @@ function analyzeFunctionDeclaration(statement, scope) {
 	const functionScope = new Scope(scope);
 
 	for (const parameter of statement.parameters) {
-		functionScope.define(parameter.name.name, { type: 'Parameter' });
+		functionScope.define(parameter.name.name, {
+			type: 'Parameter',
+			verseType: resolveDeclaredType(parameter.paramType),
+		});
 	}
 
 	analyzeBlock(statement.body, functionScope);
@@ -148,7 +180,10 @@ function analyzeFunctionDeclaration(statement, scope) {
 
 function analyzeForStatement(statement, scope) {
 	const loopScope = new Scope(scope);
-	loopScope.define(statement.variable.name, { type: 'LoopVariable' });
+	loopScope.define(statement.variable.name, {
+		type: 'LoopVariable',
+		verseType: resolveDeclaredType(statement.varType),
+	});
 	analyzeBlock(statement.body, loopScope);
 }
 
@@ -156,7 +191,13 @@ function analyzeBlock(statements, scope) {
 	for (const statement of statements) {
 		if (statement.type === 'VariableDeclaration' || statement.type === 'ConstDeclaration') {
 			analyzeStatement(statement, scope);
-			scope.define(statement.name.name, { type: statement.type });
+			const declaredType = statement.type === 'VariableDeclaration'
+				? resolveDeclaredType(statement.varType)
+				: resolveDeclaredType(statement.constType);
+			scope.define(statement.name.name, {
+				type: statement.type,
+				verseType: declaredType || resolveExpressionType(statement.value, scope),
+			});
 			continue;
 		}
 
@@ -220,6 +261,9 @@ function analyzeExpression(expression, scope) {
 		case 'InterpolatedString':
 			for (const part of expression.parts) {
 				analyzeExpression(part, scope);
+				if (part.type === 'InterpolatedExpression') {
+					ensureStringConvertible(part.expression, scope);
+				}
 			}
 			return;
 		case 'InterpolatedExpression':
@@ -245,4 +289,169 @@ function ensureKnownIdentifier(name, scope) {
 	}
 
 	throw new SemanticError(`Unknown identifier \`${name}\`. (${3506})`);
+}
+
+function resolveDeclaredType(typeNode) {
+	if (!typeNode) {
+		return null;
+	}
+
+	if (typeNode.type === 'Type') {
+		return { kind: 'primitive', name: typeNode.name };
+	}
+
+	if (typeNode.type === 'ArrayType') {
+		return {
+			kind: 'array',
+			elementType: resolveDeclaredType(typeNode.elementType),
+		};
+	}
+
+	return null;
+}
+
+function resolveExpressionType(expression, scope) {
+	switch (expression.type) {
+		case 'StringLiteral':
+			return { kind: 'primitive', name: 'string' };
+		case 'IntegerLiteral':
+			return { kind: 'primitive', name: 'int' };
+		case 'FloatLiteral':
+			return { kind: 'primitive', name: 'float' };
+		case 'BooleanLiteral':
+			return { kind: 'primitive', name: 'logic' };
+		case 'ArrayLiteral': {
+			const elementType = expression.elements.length > 0
+				? resolveExpressionType(expression.elements[0], scope)
+				: null;
+			return { kind: 'array', elementType };
+		}
+		case 'Identifier':
+			return scope.lookup(expression.name)?.verseType || null;
+		case 'ArrayLength':
+			return { kind: 'primitive', name: 'int' };
+		case 'ArrayAccess': {
+			const arrayType = resolveExpressionType(expression.array, scope);
+			return arrayType?.kind === 'array' ? arrayType.elementType : null;
+		}
+		case 'BinaryExpression':
+			return resolveBinaryExpressionType(expression, scope);
+		case 'UnaryExpression':
+			return resolveUnaryExpressionType(expression, scope);
+		case 'AssignmentExpression':
+			return resolveExpressionType(expression.value, scope);
+		case 'FunctionCall': {
+			const symbol = scope.lookup(expression.name.name);
+			if (!symbol) {
+				return null;
+			}
+
+			if (symbol.returnType) {
+				return symbol.returnType;
+			}
+
+			if (symbol.type === 'NativeFunction') {
+				return normalizeRuntimeTypeName(symbol.returnType);
+			}
+
+			return null;
+		}
+		case 'InterpolatedExpression':
+			return resolveExpressionType(expression.expression, scope);
+		default:
+			return null;
+	}
+}
+
+function resolveBinaryExpressionType(expression, scope) {
+	switch (expression.operator) {
+		case '>':
+		case '<':
+		case '>=':
+		case '<=':
+		case 'and':
+		case 'or':
+			return { kind: 'primitive', name: 'logic' };
+		case '+':
+		case '-':
+		case '*':
+		case '/': {
+			const leftType = resolveExpressionType(expression.left, scope);
+			const rightType = resolveExpressionType(expression.right, scope);
+			if (leftType?.name === 'float' || rightType?.name === 'float') {
+				return { kind: 'primitive', name: 'float' };
+			}
+			if (leftType?.name === 'int' && rightType?.name === 'int') {
+				return { kind: 'primitive', name: 'int' };
+			}
+			return null;
+		}
+		default:
+			return null;
+	}
+}
+
+function resolveUnaryExpressionType(expression, scope) {
+	if (expression.operator === 'not' || expression.operator === '?') {
+		return { kind: 'primitive', name: 'logic' };
+	}
+
+	return resolveExpressionType(expression.expression, scope);
+}
+
+function normalizeRuntimeTypeName(typeName) {
+	if (!typeName) {
+		return null;
+	}
+
+	if (typeName === 'array') {
+		return { kind: 'array', elementType: null };
+	}
+
+	return { kind: 'primitive', name: typeName };
+}
+
+function ensureStringConvertible(expression, scope) {
+	const verseType = resolveExpressionType(expression, scope);
+	if (!verseType) {
+		return;
+	}
+
+	if (isStringConvertibleType(verseType)) {
+		return;
+	}
+
+	throw new SemanticError(
+		buildToStringOverloadError(verseType),
+		3509,
+	);
+}
+
+function isStringConvertibleType(verseType) {
+	if (verseType.kind !== 'primitive') {
+		return false;
+	}
+
+	return ['int', 'float', 'string'].includes(verseType.name);
+}
+
+function buildToStringOverloadError(verseType) {
+	return [
+		`No overload of the function \`ToString\` matches the provided arguments (:${formatVerseType(verseType)}). Could be any of:`,
+		'    function (/Verse.org/Verse:)ToString(:float) in package Verse',
+		'    function (/Verse.org/Verse:)ToString(:int) in package Verse',
+		'    function (/Verse.org/Verse:)ToString(:string) in package Verse(3509)',
+	].join('\n');
+}
+
+function formatVerseType(verseType) {
+	if (!verseType) {
+		return 'unknown';
+	}
+
+	if (verseType.kind === 'array') {
+		return `[]${formatVerseType(verseType.elementType)}`;
+	}
+
+	return verseType.name;
 }

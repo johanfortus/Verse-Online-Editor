@@ -123,7 +123,7 @@ function analyzeStatement(statement, scope) {
 			ensureStringConvertible(statement.value, scope);
 			return;
 		case 'IfStatement':
-			analyzeExpression(statement.condition, scope);
+			analyzeExpression(statement.condition, scope, { failureContext: true });
 			analyzeBlock(statement.body, new Scope(scope));
 			analyzeBlock(statement.elseBody || [], new Scope(scope));
 			return;
@@ -207,7 +207,7 @@ function analyzeBlock(statements, scope) {
 
 function analyzeSetStatement(statement, scope) {
 	if (statement.name.type === 'ArrayAccess') {
-		analyzeExpression(statement.name, scope);
+		analyzeExpression(statement.name, scope, { failureContext: true });
 	} else {
 		ensureKnownIdentifier(statement.name.name, scope);
 	}
@@ -215,7 +215,9 @@ function analyzeSetStatement(statement, scope) {
 	analyzeExpression(statement.value, scope);
 }
 
-function analyzeExpression(expression, scope) {
+function analyzeExpression(expression, scope, options = {}) {
+	const { failureContext = false } = options;
+
 	switch (expression.type) {
 		case 'StringLiteral':
 		case 'IntegerLiteral':
@@ -231,43 +233,48 @@ function analyzeExpression(expression, scope) {
 			ensureKnownIdentifier(expression.name, scope);
 			return;
 		case 'ArrayLength':
-			analyzeExpression(expression.array, scope);
+			analyzeExpression(expression.array, scope, options);
 			return;
 		case 'ArrayAccess':
-			analyzeExpression(expression.array, scope);
-			analyzeExpression(expression.index, scope);
+			analyzeExpression(expression.array, scope, options);
+			analyzeExpression(expression.index, scope, options);
+			ensureFailureContextForArrayAccess(expression, scope, failureContext);
 			return;
 		case 'BinaryExpression':
-			analyzeExpression(expression.left, scope);
-			analyzeExpression(expression.right, scope);
+			analyzeExpression(expression.left, scope, options);
+			analyzeExpression(expression.right, scope, options);
 			return;
 		case 'UnaryExpression':
-			analyzeExpression(expression.expression, scope);
+			analyzeExpression(expression.expression, scope, options);
 			return;
 		case 'AssignmentExpression':
-			analyzeExpression(expression.value, scope);
-			scope.define(expression.variable.name, { type: 'DynamicVariable' });
+			analyzeExpression(expression.value, scope, options);
+			scope.define(expression.variable.name, {
+				type: 'DynamicVariable',
+				verseType: resolveExpressionType(expression.value, scope),
+			});
 			return;
 		case 'Range':
-			analyzeExpression(expression.start, scope);
-			analyzeExpression(expression.end, scope);
+			analyzeExpression(expression.start, scope, options);
+			analyzeExpression(expression.end, scope, options);
 			return;
 		case 'FunctionCall':
 			ensureKnownIdentifier(expression.name.name, scope);
 			for (const argument of expression.arguments) {
-				analyzeExpression(argument, scope);
+				analyzeExpression(argument, scope, options);
 			}
+			ensureFailureContextForArrayInvocation(expression, scope, failureContext);
 			return;
 		case 'InterpolatedString':
 			for (const part of expression.parts) {
-				analyzeExpression(part, scope);
+				analyzeExpression(part, scope, options);
 				if (part.type === 'InterpolatedExpression') {
 					ensureStringConvertible(part.expression, scope);
 				}
 			}
 			return;
 		case 'InterpolatedExpression':
-			analyzeExpression(expression.expression, scope);
+			analyzeExpression(expression.expression, scope, options);
 			return;
 		case 'TextPart':
 			return;
@@ -346,6 +353,10 @@ function resolveExpressionType(expression, scope) {
 				return null;
 			}
 
+			if (isArraySymbol(symbol)) {
+				return symbol.verseType?.elementType || null;
+			}
+
 			if (symbol.returnType) {
 				return symbol.returnType;
 			}
@@ -361,6 +372,42 @@ function resolveExpressionType(expression, scope) {
 		default:
 			return null;
 	}
+}
+
+function ensureFailureContextForArrayAccess(expression, scope, failureContext) {
+	const arrayType = resolveExpressionType(expression.array, scope);
+	if (arrayType?.kind !== 'array') {
+		return;
+	}
+
+	if (failureContext) {
+		return;
+	}
+
+	throw new SemanticError(
+		"This invocation calls a function that has the 'decides' effect, which is not allowed by its context. The 'decides' effect indicates that the invocation calls a function that might fail, and so must occur in a failure context that will handle the failure. Some examples of failure contexts are the condition clause of an 'if', the left operand of 'or', or the clause of the 'logic' macro.(3512)",
+		3512,
+	);
+}
+
+function ensureFailureContextForArrayInvocation(expression, scope, failureContext) {
+	const symbol = scope.lookup(expression.name.name);
+	if (!isArraySymbol(symbol)) {
+		return;
+	}
+
+	if (failureContext) {
+		return;
+	}
+
+	throw new SemanticError(
+		"This invocation calls a function that has the 'decides' effect, which is not allowed by its context. The 'decides' effect indicates that the invocation calls a function that might fail, and so must occur in a failure context that will handle the failure. Some examples of failure contexts are the condition clause of an 'if', the left operand of 'or', or the clause of the 'logic' macro.(3512)",
+		3512,
+	);
+}
+
+function isArraySymbol(symbol) {
+	return symbol?.verseType?.kind === 'array';
 }
 
 function resolveBinaryExpressionType(expression, scope) {

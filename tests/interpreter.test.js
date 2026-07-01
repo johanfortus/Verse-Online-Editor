@@ -755,7 +755,6 @@ hello_world_device := class(creative_device):
 using { /Fortnite.com/Devices }
 using { /Verse.org/Simulation }
 using { /UnrealEngine.com/Temporary/Diagnostics }
-using { /Verse.org/Verse }
 
 hello_world_device := class(creative_device):
 
@@ -784,7 +783,6 @@ hello_world_device := class(creative_device):
 using { /Fortnite.com/Devices }
 using { /Verse.org/Simulation }
 using { /UnrealEngine.com/Temporary/Diagnostics }
-using { /Verse.org/Verse }
 
 hello_world_device := class(creative_device):
 

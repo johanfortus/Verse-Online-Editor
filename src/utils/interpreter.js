@@ -4,7 +4,7 @@
 // PEG.js generates parser.js, and given code input, constructs an AST following the defined grammar rules.
 // The AST is then used by this interpreter to execute the program logic.
 
-import { getImportedRuntimeBindings, getImportedSymbols } from './verseLibraries.js';
+import { getImportedRuntimeBindings, getImportedSymbols, resolveImportPaths } from './verseLibraries.js';
 import { VerseFailure } from './verseFailure.js';
 
 export class VerseInterpreter {
@@ -42,9 +42,9 @@ export class VerseInterpreter {
 	}
 
 	loadImportedLibraries(program) {
-		const importPaths = program.body
+		const importPaths = resolveImportPaths(program.body
 			.filter(statement => statement.type === 'UsingDeclaration')
-			.map(statement => statement.path);
+			.map(statement => statement.path));
 		const importedSymbols = getImportedSymbols(importPaths);
 		const runtimeBindings = getImportedRuntimeBindings(importPaths);
 

@@ -132,6 +132,14 @@ for (const [libraryPath, library] of Object.entries(VERSE_LIBRARY_REGISTRY)) {
 	}
 }
 
+// /Verse.org/Verse is the language prelude - real Verse makes it available
+// in every file without an explicit `using`, so it's always in scope here too.
+const IMPLICITLY_IMPORTED_PATHS = ['/Verse.org/Verse'];
+
+export function resolveImportPaths(explicitImportPaths) {
+	return [...new Set([...IMPLICITLY_IMPORTED_PATHS, ...explicitImportPaths])];
+}
+
 export function getLibrary(path) {
 	return VERSE_LIBRARY_REGISTRY[path] || null;
 }

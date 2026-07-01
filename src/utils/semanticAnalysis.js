@@ -1,4 +1,4 @@
-import { getImportedSymbols, getLibrary, getSuggestedUsingForSymbol } from './verseLibraries.js';
+import { getImportedSymbols, getLibrary, getSuggestedUsingForSymbol, resolveImportPaths } from './verseLibraries.js';
 
 class SemanticError extends Error {
 	constructor(message, code = 3506) {
@@ -19,7 +19,7 @@ export function analyzeProgram(ast) {
 	}
 
 	const globalScope = new Scope();
-	const importedSymbols = getImportedSymbols(importPaths);
+	const importedSymbols = getImportedSymbols(resolveImportPaths(importPaths));
 
 	for (const [symbolName, symbol] of importedSymbols.entries()) {
 		globalScope.define(symbolName, symbol);

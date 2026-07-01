@@ -52,7 +52,6 @@ hello_world_device := class(creative_device):
 		const source = `
 using { /Fortnite.com/Devices }
 using { /Verse.org/Simulation }
-using { /Verse.org/Verse }
 
 hello_world_device := class(creative_device):
 

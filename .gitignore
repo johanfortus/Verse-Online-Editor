@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local-only UEFN API reference
+reference/uefn-digests/*
+!reference/uefn-digests/.gitkeep

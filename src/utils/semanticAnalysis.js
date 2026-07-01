@@ -86,6 +86,7 @@ function collectTopLevelDeclaration(statement, scope) {
 			scope.define(statement.name.name, {
 				type: statement.type,
 				returnType: resolveDeclaredType(statement.returnType),
+				effects: statement.effects || [],
 			});
 			break;
 		default:
@@ -158,7 +159,13 @@ function analyzeClassDefinition(statement, scope) {
 
 	for (const member of statement.members) {
 		if (member.name?.name) {
-			classScope.define(member.name.name, { type: member.type });
+			classScope.define(member.name.name, member.type === 'FunctionDeclaration'
+				? {
+					type: member.type,
+					returnType: resolveDeclaredType(member.returnType),
+					effects: member.effects || [],
+				}
+				: { type: member.type });
 		}
 	}
 
@@ -279,8 +286,13 @@ function analyzeExpression(expression, scope, options = {}) {
 			ensureFailureContextForArrayAccess(expression, scope, failureContext);
 			return;
 		case 'BinaryExpression':
-			analyzeExpression(expression.left, scope, options);
-			analyzeExpression(expression.right, scope, options);
+			if (expression.operator === 'or') {
+				analyzeExpression(expression.left, scope, options);
+				analyzeExpression(expression.right, scope, { ...options, failureContext: false });
+			} else {
+				analyzeExpression(expression.left, scope, options);
+				analyzeExpression(expression.right, scope, options);
+			}
 			return;
 		case 'UnaryExpression':
 			analyzeExpression(expression.expression, scope, options);
@@ -301,7 +313,7 @@ function analyzeExpression(expression, scope, options = {}) {
 			for (const argument of expression.arguments) {
 				analyzeExpression(argument, scope, options);
 			}
-			ensureFailureContextForArrayInvocation(expression, scope, failureContext);
+			ensureFailureContextForFailableInvocation(expression, scope, failureContext);
 			return;
 		case 'InterpolatedString':
 			for (const part of expression.parts) {
@@ -428,13 +440,13 @@ function ensureFailureContextForArrayAccess(expression, scope, failureContext) {
 	);
 }
 
-function ensureFailureContextForArrayInvocation(expression, scope, failureContext) {
+function ensureFailureContextForFailableInvocation(expression, scope, failureContext) {
 	const symbol = scope.lookup(expression.name.name);
-	if (!isArraySymbol(symbol)) {
+	if (!isArraySymbol(symbol) && !isDecidesFunctionSymbol(symbol)) {
 		return;
 	}
 
-	if (failureContext) {
+	if (failureContext && expression.usesBrackets) {
 		return;
 	}
 
@@ -446,6 +458,14 @@ function ensureFailureContextForArrayInvocation(expression, scope, failureContex
 
 function isArraySymbol(symbol) {
 	return symbol?.verseType?.kind === 'array';
+}
+
+function isDecidesFunctionSymbol(symbol) {
+	if (symbol?.type !== 'FunctionDeclaration' && symbol?.type !== 'NativeFunction') {
+		return false;
+	}
+
+	return (symbol.effects || []).includes('decides');
 }
 
 function resolveBinaryExpressionType(expression, scope) {

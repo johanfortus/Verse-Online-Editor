@@ -69,7 +69,7 @@
 
   function Parameter(name, paramType) { return { type: "Parameter", name: name, paramType: paramType }; }
 
-  function FunctionCall(name, args) { return { type: "FunctionCall", name: name, arguments: args }; }
+  function FunctionCall(name, args, usesBrackets) { return { type: "FunctionCall", name: name, arguments: args, usesBrackets: !!usesBrackets }; }
 
   function ReturnStatement(value) { return { type: "ReturnStatement", value: value }; }
 
@@ -173,8 +173,9 @@ ClassDefinition
 
 
 SetStatement
-  = "set" _ name:Identifier _ operator:AssignmentOperator _ value:Expression _ {
-      return SetStatement(name, operator, value);
+  = "set" _ name:Identifier arrayIndex:("[" _ Expression _ "]")? _ operator:AssignmentOperator _ value:Expression _ {
+      const target = arrayIndex ? ArrayAccess(name, arrayIndex[2]) : name;
+      return SetStatement(target, operator, value);
     }
 
 
@@ -443,10 +444,10 @@ ReturnType
 
 FunctionCall
   = name:Identifier _ "(" _ args:ArgumentList? _ ")" {
-      return FunctionCall(name, args || []);
+      return FunctionCall(name, args || [], false);
     }
   / name:Identifier "[" _ args:ArgumentList? _ "]" {
-      return FunctionCall(name, args || []);
+      return FunctionCall(name, args || [], true);
     }
 
 ArgumentList

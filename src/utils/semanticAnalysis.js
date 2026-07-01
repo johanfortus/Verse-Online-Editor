@@ -407,12 +407,12 @@ function resolveExpressionType(expression, scope) {
 				return symbol.verseType?.elementType || null;
 			}
 
-			if (symbol.returnType) {
-				return symbol.returnType;
-			}
-
 			if (symbol.type === 'NativeFunction') {
 				return normalizeRuntimeTypeName(symbol.returnType);
+			}
+
+			if (symbol.returnType) {
+				return symbol.returnType;
 			}
 
 			return null;
@@ -475,8 +475,11 @@ function resolveBinaryExpressionType(expression, scope) {
 		case '>=':
 		case '<=':
 		case 'and':
-		case 'or':
 			return { kind: 'primitive', name: 'logic' };
+		case 'or': {
+			const leftType = resolveExpressionType(expression.left, scope);
+			return leftType || resolveExpressionType(expression.right, scope);
+		}
 		case '+':
 		case '-':
 		case '*':

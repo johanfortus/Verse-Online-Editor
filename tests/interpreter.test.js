@@ -724,3 +724,108 @@ hello_world_device := class(creative_device):
 		expect(runInterpreterOnly(source)).toBe(expected);
 	});
 });
+
+
+describe('failure contexts and decides effects', () => {
+	it('routes an out-of-bounds array access inside an if to the else branch', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        var ExampleArray : []int = array{10, 20, 30}
+        if (Element := ExampleArray[10]):
+            Print("Found {Element}")
+        else:
+            Print("Index out of bounds")
+`;
+		const expected = [
+			'Index out of bounds',
+			'',
+		].join('\n');
+
+		expect(run(source)).toBe(expected);
+	});
+
+	it('evaluates Floor[] success and failure (NaN) branches', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+using { /Verse.org/Verse }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        if (Whole := Floor[4.5]):
+            Print("Floor succeeded: {Whole}")
+        else:
+            Print("Floor failed")
+
+        if (Whole := Floor[0.0 / 0.0]):
+            Print("Floor succeeded: {Whole}")
+        else:
+            Print("Floor failed")
+`;
+		const expected = [
+			'Floor succeeded: 4',
+			'Floor failed',
+			'',
+		].join('\n');
+
+		expect(run(source)).toBe(expected);
+	});
+
+	it('evaluates Mod[] success and division-by-zero failure branches', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+using { /Verse.org/Verse }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        if (Remainder := Mod[10, 3]):
+            Print("Mod succeeded: {Remainder}")
+        else:
+            Print("Mod failed")
+
+        if (Remainder := Mod[10, 0]):
+            Print("Mod succeeded: {Remainder}")
+        else:
+            Print("Mod failed")
+`;
+		const expected = [
+			'Mod succeeded: 1',
+			'Mod failed',
+			'',
+		].join('\n');
+
+		expect(run(source)).toBe(expected);
+	});
+
+	it('falls back to the right operand of or when the left operand fails', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        var ExampleArray : []int = array{10, 20, 30}
+        if (Element := ExampleArray[10] or 99):
+            Print("Element is {Element}")
+`;
+		const expected = [
+			'Element is 99',
+			'',
+		].join('\n');
+
+		expect(run(source)).toBe(expected);
+	});
+});

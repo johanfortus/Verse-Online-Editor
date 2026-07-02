@@ -511,6 +511,7 @@ export class VerseInterpreter {
 			case '<': return left < right;
 			case '>=': return left >= right;
 			case '<=': return left <= right;
+			case '=': return left === right;
 			case 'and': return left && right;
 			default:
 				throw new Error(`Unsupported binary operator: ${expression.operator}`);

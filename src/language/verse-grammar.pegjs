@@ -331,7 +331,7 @@ LogicalOperator
 
 
 ComparisonOperator
-  = ">" / "<" / ">=" / "<="
+  = ">=" / "<=" / ">" / "<" / "="
 
 
 AdditiveOperator

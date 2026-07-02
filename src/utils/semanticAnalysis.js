@@ -551,6 +551,7 @@ function resolveBinaryExpressionType(expression, scope) {
 		case '<':
 		case '>=':
 		case '<=':
+		case '=':
 		case 'and':
 			return { kind: 'primitive', name: 'logic' };
 		case 'or': {

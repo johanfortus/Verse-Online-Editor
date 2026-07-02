@@ -634,6 +634,61 @@ hello_world_device := class(creative_device):
 
 		expect(runInterpreterOnly(source)).toBe(expected);
 	});
+
+	it('evaluates equality operator', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        Value : int = 7
+
+        if (Value = 7):
+            Print("PASS: single '=' works as equality for 7")
+
+        if (Value = 8):
+            Print("FAIL: 7 should not equal 8")
+        else:
+            Print("PASS: single '=' correctly reports 7 != 8")
+`;
+
+		const expected = [
+			"PASS: single '=' works as equality for 7",
+			"PASS: single '=' correctly reports 7 != 8",
+			'',
+		].join('\n');
+
+		expect(runInterpreterOnly(source)).toBe(expected);
+	});
+
+	it('evaluates equality operator inside a if-then statement', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        num1 : int = 25
+        num2 : int = 25
+
+        if:
+            num1 = num2
+        then:
+            Print("equal")
+        else:
+            Print("not equal")
+`;
+
+		const expected = [
+			'equal',
+			'',
+		].join('\n');
+
+		expect(runInterpreterOnly(source)).toBe(expected);
+	});
 });
 
 

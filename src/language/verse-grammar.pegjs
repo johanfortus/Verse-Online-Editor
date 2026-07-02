@@ -185,17 +185,22 @@ PrintStatement
     }
 
 IfStatement
-  = "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ":" _ body:Statement+ _ "else" _ ":" _ elseBody:Statement+ "end" _ {
-      return IfStatement(condition, body, elseBody);
-    }
-  / "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ":" _ body:Statement+ !(_ "else") "end" _ {
-      return IfStatement(condition, body, []);
+  = "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ":" _ body:Statement+ _ tail:ElseTail? _ "end" _ {
+      return IfStatement(condition, body, tail || []);
     }
   / "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" body:BraceBlock _ "else" elseBody:BraceBlock {
       return IfStatement(condition, body, elseBody);
     }
   / "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" body:BraceBlock {
       return IfStatement(condition, body, []);
+    }
+
+ElseTail
+  = "else" _ "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ":" _ body:Statement+ _ tail:ElseTail? {
+      return [IfStatement(condition, body, tail || [])];
+    }
+  / "else" _ ":" _ elseBody:Statement+ {
+      return elseBody;
     }
 
 AssignmentExpression

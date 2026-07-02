@@ -25,7 +25,7 @@ export function injectEnds(sourceCode) {
         const indentWidth = (/^[ \t]*/.exec(raw)[0]).length;
         const trimmed = codePortion.trim();
         const isBlankLine = trimmed === '';
-        const startsElseClause = trimmed === 'else:';
+        const startsElseClause = /^else\b/.test(trimmed);
         const opensBraceBlock = trimmed === '{'
             ? pendingBraceHeader
             : trimmed.endsWith('{') && isBraceBlockHeader(trimmed.slice(0, -1).trim());

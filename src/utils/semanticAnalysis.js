@@ -303,6 +303,12 @@ function analyzeExpression(expression, scope, options = {}) {
 			return;
 		case 'AssignmentExpression':
 			analyzeExpression(expression.value, scope, options);
+			if (failureContext && !expressionCanFail(expression.value, scope)) {
+				throw new SemanticError(
+					"Expected an expression that can fail in the 'if' condition clause.(3513)",
+					3513,
+				);
+			}
 			scope.define(expression.variable.name, {
 				type: 'DynamicVariable',
 				verseType: resolveExpressionType(expression.value, scope),
@@ -494,6 +500,34 @@ function isIntegerDivision(expression, scope) {
 	const leftType = resolveExpressionType(expression.left, scope);
 	const rightType = resolveExpressionType(expression.right, scope);
 	return leftType?.name === 'int' && rightType?.name === 'int';
+}
+
+function expressionCanFail(expression, scope) {
+	switch (expression.type) {
+		case 'FunctionCall': {
+			const symbol = scope.lookup(expression.name.name);
+			if (isArraySymbol(symbol) || isDecidesFunctionSymbol(symbol, expression, scope)) {
+				return true;
+			}
+
+			return expression.arguments.some(argument => expressionCanFail(argument, scope));
+		}
+		case 'ArrayAccess':
+			return resolveExpressionType(expression.array, scope)?.kind === 'array'
+				|| expressionCanFail(expression.index, scope);
+		case 'BinaryExpression':
+			if (expression.operator === '/' && isIntegerDivision(expression, scope)) {
+				return true;
+			}
+
+			return expressionCanFail(expression.left, scope) || expressionCanFail(expression.right, scope);
+		case 'UnaryExpression':
+			return expressionCanFail(expression.expression, scope);
+		case 'InterpolatedExpression':
+			return expressionCanFail(expression.expression, scope);
+		default:
+			return false;
+	}
 }
 
 function ensureFailureContextForIntegerDivision(expression, scope, failureContext) {

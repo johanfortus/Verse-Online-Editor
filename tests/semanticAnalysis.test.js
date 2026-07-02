@@ -110,6 +110,21 @@ hello_world_device := class(creative_device):
 		expect(() => analyze(source)).toThrow();
 	});
 
+	it('rejects binding a never-failing float division result in an if condition', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        if (Result := 10.0 / 3.0):
+            Print("{Result}")
+`;
+
+		expect(() => analyze(source)).toThrow();
+	});
+
 	it('rejects printing an unconverted rational value from int division', () => {
 		const source = `
 using { /Fortnite.com/Devices }

@@ -25,7 +25,7 @@ export function injectEnds(sourceCode) {
         const indentWidth = (/^[ \t]*/.exec(raw)[0]).length;
         const trimmed = codePortion.trim();
         const isBlankLine = trimmed === '';
-        const startsElseClause = /^else\b/.test(trimmed);
+        const continuesConditional = /^(else|then)\b/.test(trimmed);
         const opensBraceBlock = trimmed === '{'
             ? pendingBraceHeader
             : trimmed.endsWith('{') && isBraceBlockHeader(trimmed.slice(0, -1).trim());
@@ -34,7 +34,7 @@ export function injectEnds(sourceCode) {
         if(!isBlankLine && braceBlockDepth === 0) {
             while (
                 indentWidth < indentStack[indentStack.length - 1] &&
-                !startsElseClause
+                !continuesConditional
             ) {
                 indentStack.pop();
                 outputLines.push('end');

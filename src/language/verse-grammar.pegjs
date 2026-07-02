@@ -185,13 +185,16 @@ PrintStatement
     }
 
 IfStatement
-  = "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ":" _ body:Statement+ _ tail:ElseTail? _ "end" _ {
+  = "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ("then" _)? ":" _ body:Statement+ _ tail:ElseTail? _ "end" _ {
       return IfStatement(condition, body, tail || []);
     }
-  / "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" body:BraceBlock _ "else" elseBody:BraceBlock {
+  / "if" _ ":" _ condition:(AssignmentExpression / LogicalExpression) _ "then" _ ":" _ body:Statement+ _ tail:ElseTail? _ "end" _ {
+      return IfStatement(condition, body, tail || []);
+    }
+  / "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ("then" _)? body:BraceBlock _ "else" elseBody:BraceBlock {
       return IfStatement(condition, body, elseBody);
     }
-  / "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" body:BraceBlock {
+  / "if" _ "(" _ condition:(AssignmentExpression / LogicalExpression) _ ")" _ ("then" _)? body:BraceBlock {
       return IfStatement(condition, body, []);
     }
 

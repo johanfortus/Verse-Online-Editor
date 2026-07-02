@@ -502,7 +502,11 @@ export class VerseInterpreter {
 			case '+': return left + right;
 			case '-': return left - right;
 			case '*': return left * right;
-			case '/': return left / right;
+			case '/':
+				if (expression.isIntegerDivision && right === 0) {
+					throw new VerseFailure(`Division by zero: ${left} / ${right}`);
+				}
+				return left / right;
 			case '>': return left > right;
 			case '<': return left < right;
 			case '>=': return left >= right;

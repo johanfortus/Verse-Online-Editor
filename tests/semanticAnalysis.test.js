@@ -81,4 +81,47 @@ hello_world_device := class(creative_device):
 
 		expect(() => analyze(source)).not.toThrow();
 	});
+
+	it('accepts calling Floor(int) with parentheses outside a failure context since the int overload is non-decides', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        var Result : int = Floor(4)
+`;
+
+		expect(() => analyze(source)).not.toThrow();
+	});
+
+	it('rejects calling Floor(float) with parentheses since the float overload is decides', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        var Result : int = Floor(4.0)
+`;
+
+		expect(() => analyze(source)).toThrow();
+	});
+
+	it('rejects printing an unconverted rational value from int division', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        if (Result := 10 / 3):
+            Print("{Result}")
+`;
+
+		expect(() => analyze(source)).toThrow();
+	});
 });

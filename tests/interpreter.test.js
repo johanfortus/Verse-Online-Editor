@@ -855,7 +855,7 @@ hello_world_device := class(creative_device):
 		expect(run(source)).toBe(expected);
 	});
 
-	it('allows a decides function call to use parentheses instead of brackets in a failure context', () => {
+	it('compiles Floor(MyInt / 2) because the rational-argument Floor overload is non-decides, while the nested int division supplies the failure context', () => {
 		const source = `
 using { /Fortnite.com/Devices }
 using { /Verse.org/Simulation }
@@ -869,7 +869,7 @@ hello_world_device := class(creative_device):
         if (NewValue := Floor(MyInt / 2)):
             set MyInt = NewValue
             Print("MyInt is now {MyInt}")
-        
+
         if (ModResult := Mod[10, 3]):
             Print("Modulo result: {ModResult}")
 `;
@@ -877,6 +877,87 @@ hello_world_device := class(creative_device):
 		const expected = [
 			'MyInt is now 5',
 			'Modulo result: 1',
+			'',
+		].join('\n');
+
+		expect(run(source)).toBe(expected);
+	});
+
+	it('evaluates Quotient[] with a truncating, non-failing inexact division and a failing zero-divisor', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        if (Exact := Quotient[10, 2]):
+            Print("Quotient[10,2] = {Exact}")
+
+        if (Truncated := Quotient[10, 3]):
+            Print("Quotient[10,3] = {Truncated}")
+        else:
+            Print("Quotient[10,3] failed")
+
+        if (ByZero := Quotient[10, 0]):
+            Print("Quotient[10,0] = {ByZero}")
+        else:
+            Print("Quotient[10,0] failed")
+`;
+
+		const expected = [
+			'Quotient[10,2] = 5',
+			'Quotient[10,3] = 3',
+			'Quotient[10,0] failed',
+			'',
+		].join('\n');
+
+		expect(run(source)).toBe(expected);
+	});
+
+	it('evaluates int division as a rational-producing decides operation that only fails on zero-divisor', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        if (Inexact := 10 / 3):
+            Print("10 / 3 = {Floor(Inexact)}")
+
+        if (ByZero := 10 / 0):
+            Print("10 / 0 = {Floor(ByZero)}")
+        else:
+            Print("10 / 0 failed")
+`;
+
+		const expected = [
+			'10 / 3 = 3',
+			'10 / 0 failed',
+			'',
+		].join('\n');
+
+		expect(run(source)).toBe(expected);
+	});
+
+	it('evaluates float division outside any failure context since it is never decides', () => {
+		const source = `
+using { /Fortnite.com/Devices }
+using { /Verse.org/Simulation }
+using { /UnrealEngine.com/Temporary/Diagnostics }
+
+hello_world_device := class(creative_device):
+
+    OnBegin<override>()<suspends>:void=
+        var Result : float = 10.0 / 3.0
+        Print("{Result}")
+`;
+
+		const expected = [
+			`${10.0 / 3.0}`,
 			'',
 		].join('\n');
 

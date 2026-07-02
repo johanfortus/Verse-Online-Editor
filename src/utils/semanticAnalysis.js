@@ -293,6 +293,10 @@ function analyzeExpression(expression, scope, options = {}) {
 				analyzeExpression(expression.left, scope, options);
 				analyzeExpression(expression.right, scope, options);
 			}
+			if (expression.operator === '/') {
+				expression.isIntegerDivision = isIntegerDivision(expression, scope);
+				ensureFailureContextForIntegerDivision(expression, scope, failureContext);
+			}
 			return;
 		case 'UnaryExpression':
 			analyzeExpression(expression.expression, scope, options);
@@ -408,7 +412,8 @@ function resolveExpressionType(expression, scope) {
 			}
 
 			if (symbol.type === 'NativeFunction') {
-				return normalizeRuntimeTypeName(symbol.returnType);
+				const overload = resolveNativeOverload(symbol, expression, scope);
+				return normalizeRuntimeTypeName(overload ? overload.returnType : symbol.returnType);
 			}
 
 			if (symbol.returnType) {
@@ -442,12 +447,11 @@ function ensureFailureContextForArrayAccess(expression, scope, failureContext) {
 
 function ensureFailureContextForFailableInvocation(expression, scope, failureContext) {
 	const symbol = scope.lookup(expression.name.name);
-	const isArray = isArraySymbol(symbol);
-	if (!isArray && !isDecidesFunctionSymbol(symbol)) {
+	if (!isArraySymbol(symbol) && !isDecidesFunctionSymbol(symbol, expression, scope)) {
 		return;
 	}
 
-	if (failureContext && (!isArray || expression.usesBrackets)) {
+	if (failureContext && expression.usesBrackets) {
 		return;
 	}
 
@@ -461,12 +465,50 @@ function isArraySymbol(symbol) {
 	return symbol?.verseType?.kind === 'array';
 }
 
-function isDecidesFunctionSymbol(symbol) {
+function isDecidesFunctionSymbol(symbol, expression = null, scope = null) {
 	if (symbol?.type !== 'FunctionDeclaration' && symbol?.type !== 'NativeFunction') {
 		return false;
 	}
 
+	const overload = resolveNativeOverload(symbol, expression, scope);
+	if (overload) {
+		return overload.effects.includes('decides');
+	}
+
 	return (symbol.effects || []).includes('decides');
+}
+
+function resolveNativeOverload(symbol, expression, scope) {
+	if (!symbol?.overloads || !expression || !scope) {
+		return null;
+	}
+
+	const argumentTypes = expression.arguments.map(argument => resolveExpressionType(argument, scope));
+	return symbol.overloads.find(overload =>
+		overload.parameterTypes.length === argumentTypes.length
+		&& overload.parameterTypes.every((parameterTypeName, index) => argumentTypes[index]?.name === parameterTypeName)
+	) || null;
+}
+
+function isIntegerDivision(expression, scope) {
+	const leftType = resolveExpressionType(expression.left, scope);
+	const rightType = resolveExpressionType(expression.right, scope);
+	return leftType?.name === 'int' && rightType?.name === 'int';
+}
+
+function ensureFailureContextForIntegerDivision(expression, scope, failureContext) {
+	if (!isIntegerDivision(expression, scope)) {
+		return;
+	}
+
+	if (failureContext) {
+		return;
+	}
+
+	throw new SemanticError(
+		"This invocation calls a function that has the 'decides' effect, which is not allowed by its context. The 'decides' effect indicates that the invocation calls a function that might fail, and so must occur in a failure context that will handle the failure. Some examples of failure contexts are the condition clause of an 'if', the left operand of 'or', or the clause of the 'logic' macro.(3512)",
+		3512,
+	);
 }
 
 function resolveBinaryExpressionType(expression, scope) {

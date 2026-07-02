@@ -283,14 +283,31 @@ export class VerseInterpreter {
 		return this.lastExpressionValue;
 	}
 
-	visitLoopStatement(loopStatement) {
-		while (true) {
-			for (const statement of loopStatement.body) {
+	runIterationBody(statements) {
+		const scopeKeysBefore = new Set(this.symbolTable.keys());
+		try {
+			for (const statement of statements) {
 				this.visitStatement(statement);
 				if (this.breakEncountered) {
-					this.breakEncountered = false;
-					return;
+					break;
 				}
+			}
+		}
+		finally {
+			for (const key of this.symbolTable.keys()) {
+				if (!scopeKeysBefore.has(key)) {
+					this.symbolTable.delete(key);
+				}
+			}
+		}
+	}
+
+	visitLoopStatement(loopStatement) {
+		while (true) {
+			this.runIterationBody(loopStatement.body);
+			if (this.breakEncountered) {
+				this.breakEncountered = false;
+				return;
 			}
 		}
 	}
@@ -307,12 +324,10 @@ export class VerseInterpreter {
 
 		for (let i = start; i <= end; i++) {
 			this.symbolTable.set(forStatement.variable.name, { type: varType, value: i });
-			for (const statement of forStatement.body) {
-				this.visitStatement(statement);
-				if (this.breakEncountered) {
-					this.breakEncountered = false;
-					return;
-				}
+			this.runIterationBody(forStatement.body);
+			if (this.breakEncountered) {
+				this.breakEncountered = false;
+				return;
 			}
 		}
 	}
